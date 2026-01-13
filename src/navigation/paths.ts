@@ -1,0 +1,22 @@
+export const PATHS = {
+    HOME: '/',
+    COURSES: '/courses',
+    MY_COURSES: '/my-courses',
+    LOGIN: '/login',
+    SIGN_UP: '/sign-up',
+    RESET_PASSWORD: '/reset-password',
+    RESET_PASSWORD_CONFIRM: '/reset-password/confirm',
+    USER_DASHBOARD: '/dashboard/user/',
+    INSTRUCTOR_DASHBOARD: '/instructor/',
+    ADMIN_DASHBOARD: '/dashboard/admin/',
+    ADMIN_USERS: '/dashboard/admin/users',
+    ADMIN_ROLES: '/dashboard/admin/roles',
+    ADMIN_COURSE_LIST: '/dashboard/admin/courses',
+    INSTRUCTOR_COURSE_DETAILS: '/instructor/courses/:courseGuid',
+    INSTRUCTOR_COURSE_LIST: '/instructor/courses',
+    COURSE_PREVIEW: '/courses/preview/:courseGuid',
+    COURSE_ENROLL: '/courses/:courseGuid/enroll',
+    INSTRUCTOR_QUIZZES: '/instructor/courses/:courseGuid/quizzes/:quizGuid',
+    TAKE_COURSE_PAGE: '/courses/:courseGuid/learn',
+    TAKE_QUIZ_PAGE: '/modules/:moduleGuid/quizzes/:quizGuid'
+};
