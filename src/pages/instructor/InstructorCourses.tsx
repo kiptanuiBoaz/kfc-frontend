@@ -24,7 +24,14 @@ import {
   Typography,
   IconButton,
 } from "@mui/material";
-import { Plus, Eye, Pencil, MoreVertical, Trash2 } from "lucide-react";
+import {
+  Plus,
+  Eye,
+  Pencil,
+  MoreVertical,
+  Trash2,
+  Clipboard,
+} from "lucide-react";
 import { CourseModal } from "../../components/CourseModal";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { TCoursePrviewDetails } from "@/types/course.types";
@@ -309,9 +316,9 @@ const InstructorCourses = () => {
       >
         <MenuItem onClick={handleViewCourse} disabled={!activeCourse}>
           <ListItemIcon>
-            <Eye size={18} />
+            <Clipboard size={18} />
           </ListItemIcon>
-          View Course
+          Manage Content
         </MenuItem>
         <MenuItem
           onClick={handleEditCourse}

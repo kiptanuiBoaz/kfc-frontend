@@ -110,14 +110,14 @@ export const CoursePreviewPage = () => {
           sx={{
             p: { xs: 2, sm: 3, md: 4 },
             borderRadius: 3,
-            backgroundColor: "secondary.lighter",
+            backgroundColor: "grey.50",
           }}
         >
           <Grid container spacing={{ xs: 2, md: 4 }} alignItems="center">
             <Grid item xs={12} md={4}>
               <Box
                 component="img"
-                src={`/images/${course.guid}.jpeg`}
+                src={`/images/${course.guid}.jpg`}
                 alt={course.title}
                 sx={{
                   width: "100%",
@@ -128,12 +128,7 @@ export const CoursePreviewPage = () => {
                 }}
               />
             </Grid>
-            <Grid
-              item
-              xs={12}
-              md={8}
-              sx={{ backgroundColor: "secondary.lighter" }}
-            >
+            <Grid item xs={12} md={8} sx={{ backgroundColor: "gray.50" }}>
               <Stack spacing={2}>
                 <Typography
                   variant="h3"

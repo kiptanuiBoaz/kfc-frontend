@@ -90,7 +90,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
           },
         }}
       >
-        <Box component="img" src={`/images/${course.guid}.jpeg`} alt={title} />
+        <Box component="img" src={`/images/${course.guid}.jpg`} alt={title} />
       </Box>
       <CardContent sx={{ flexGrow: 1 }}>
         <Stack spacing={1.5}>

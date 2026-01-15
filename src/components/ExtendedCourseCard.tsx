@@ -81,7 +81,7 @@ const ExtendedCourseCard: React.FC<ExtendedCourseCardProps> = ({
       >
         <Box
           component="img"
-          src={`/images/${course.guid}.jpeg`}
+          src={`/images/${course.guid}.jpg`}
           alt={course.title}
         />
       </Box>

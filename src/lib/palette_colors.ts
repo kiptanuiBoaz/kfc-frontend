@@ -2,11 +2,11 @@ import { alpha } from "@mui/material";
 
 export
     const PRIMARTY = {
-        lighter: '#1F7F6B',
-        light: '#1F7F6B',
+        lighter: '#408F7E',
+        light: '#007C69',
         main: '#006953',
-        dark: '#005544',
-        darker: '#00382D',
+        dark: '#005C49',
+        darker: '#004F3E',
         contrastText: '#FFFFFF',
     };
 

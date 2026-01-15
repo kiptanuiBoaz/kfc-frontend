@@ -101,10 +101,8 @@ export const EnrollCourse = () => {
               <Card sx={{ display: "flex", mb: 3, borderRadius: 2 }}>
                 <CardMedia
                   component="img"
-                  sx={{ width: 120, height: 120, objectFit: "cover" }}
-                  image={
-                    "https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=1000&q=80"
-                  }
+                  sx={{ width: 150, height: 150, objectFit: "cover" }}
+                  image={`/images/${course.guid}.jpg`}
                   alt={course.title}
                 />
                 <Box sx={{ display: "flex", flexDirection: "column", flex: 1 }}>

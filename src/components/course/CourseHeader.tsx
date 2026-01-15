@@ -28,7 +28,7 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
 }) => {
   const theme = useTheme();
   const { user } = useAuth();
-  const PLACEHOLDER_IMAGE = `/images/${course.guid}.jpeg`;
+  const PLACEHOLDER_IMAGE = `/images/${course.guid}.jpg`;
   const progress = Math.min(Math.max(course.course_progress || 0, 0), 100);
   const courseImage =
     // course.image
@@ -46,7 +46,7 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
       sx={{
         p: 2,
         borderRadius: 3,
-        backgroundColor: "secondary.lighter",
+        backgroundColor: "grey.50",
         // borderBottom: 1,
         // borderColor: "grey.300",
       }}

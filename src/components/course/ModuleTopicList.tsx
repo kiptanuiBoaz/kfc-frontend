@@ -218,9 +218,7 @@ const ModuleTopicList: React.FC<ModuleTopicListProps> = ({
                                 ? theme.palette.primary.light
                                 : theme.palette.grey[200]
                             }`,
-                          bgcolor: topicActive
-                            ? "secondary.lighter"
-                            : "background.paper",
+                          bgcolor: topicActive ? "gray.50" : "background.paper",
                           cursor: "pointer",
                           transition:
                             "border-color 0.2s ease, background 0.2s ease",
