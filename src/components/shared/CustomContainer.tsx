@@ -10,5 +10,5 @@ export const CustomContainer: React.FC<CustomContainerProps> = ({
   children,
   sx,
 }) => {
-  return <Box sx={{ pr: [2, 0, 0], px: [0, 4, 8], ...sx }}>{children}</Box>;
+  return <Box sx={{ pr: [2, 0, 0], px: [2, 4, 8], ...sx }}>{children}</Box>;
 };

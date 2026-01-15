@@ -326,7 +326,7 @@ const Navbar: React.FC = () => {
             <img
               src={
                 isMobile
-                  ? "/images/vertical_logo.png"
+                  ? "/images/logos/vertical_logo.png"
                   : "/images/logos/horizontal_logo.png"
               }
               alt="logo"
