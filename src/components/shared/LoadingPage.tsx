@@ -1,5 +1,10 @@
 import React from "react";
-import { Box, CircularProgress, Typography } from "@mui/material";
+import {
+  Box,
+  CircularProgress,
+  LinearProgress,
+  Typography,
+} from "@mui/material";
 
 const LoadingPage: React.FC<{ message?: string }> = ({
   message = "Loading...",
@@ -13,7 +18,7 @@ const LoadingPage: React.FC<{ message?: string }> = ({
       minHeight="100vh"
       bgcolor="background.default"
     >
-      <CircularProgress size={60} />
+      <LinearProgress color="primary" sx={{ width: "80%" }} />
       <Typography variant="h6" sx={{ mt: 2 }}>
         {message}
       </Typography>

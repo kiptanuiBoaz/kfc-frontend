@@ -2,20 +2,20 @@ import { alpha } from "@mui/material";
 
 export
     const PRIMARTY = {
-        lighter: '#A9D89A',
-        light: '#63AD4E',
-        main: '#398526',
-        dark: '#27651B',
-        darker: '#18470F',
+        lighter: '#1F7F6B',
+        light: '#1F7F6B',
+        main: '#006953',
+        dark: '#005544',
+        darker: '#00382D',
         contrastText: '#FFFFFF',
     };
 
 export const SECONDARY = {
-    lighter: '#F2F7F0',
-    light: '#DFEAD9',
-    main: '#CADDc5',
-    dark: '#AFC4AA',
-    darker: '#8AA484',
+    lighter: '#ffadd2',
+    light: '#ff85c0',
+    main: '#ef0081',
+    dark: '#b3005e',
+    darker: '#7c0041',
     contrastText: '#FFFFFF',
 };
 

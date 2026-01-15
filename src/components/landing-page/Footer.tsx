@@ -45,7 +45,7 @@ const Footer: React.FC = () => {
         >
           <Stack spacing={0.5}>
             <Typography variant="body1" fontWeight={600}>
-              The FPC Training Academy is supported by the Import Promotion Desk
+              The KFC Training Academy is supported by the Import Promotion Desk
               (IPD)
             </Typography>
           </Stack>
@@ -63,7 +63,7 @@ const Footer: React.FC = () => {
             variant="body2"
             color="text.secondary"
           >
-            © {currentYear} FPC Academy. All rights reserved.
+            © {currentYear} KFC. All rights reserved.
           </Typography>{" "}
           <Stack
             direction="row"

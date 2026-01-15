@@ -20,7 +20,7 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { Link as RouterLink, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { PATHS } from "@/navigation/paths";
 import { isAuthUrl } from "@/utils/isAuth";
@@ -81,17 +81,29 @@ const studentNavItems = baseNavItems;
 const Navbar: React.FC = () => {
   const theme = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch<AppDispatch>();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [isScrolled, setIsScrolled] = React.useState(false);
 
   const isAuthenticated = useIsAuthenticated();
   const user = useUser();
+  const isHomePage = location.pathname === PATHS.HOME;
 
   const isAdmin = user?.role?.name?.toLowerCase() === "admin";
   const isInstructor = user?.role?.name?.toLowerCase() === "instructor";
   const isUser = user?.role?.name?.toLowerCase() === "user";
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const toggleDrawer = (nextOpen: boolean) => () => {
     setIsDrawerOpen(nextOpen);
@@ -285,8 +297,19 @@ const Navbar: React.FC = () => {
     </React.Fragment>
   );
   if (isAuthUrl(window.location.pathname)) return <></>;
+
+  const isTransparent = isHomePage && !isScrolled;
+
   return (
-    <AppBar position="static" color="transparent" elevation={0}>
+    <AppBar
+      position="fixed"
+      elevation={isTransparent ? 0 : 1}
+      sx={{
+        backgroundColor: isTransparent ? "transparent" : "background.paper",
+        transition: "all 0.3s ease-in-out",
+        color: isTransparent ? "white" : "text.primary",
+      }}
+    >
       <CustomContainer>
         <Toolbar
           disableGutters
@@ -303,11 +326,11 @@ const Navbar: React.FC = () => {
             <img
               src={
                 isMobile
-                  ? "/images/logo.png"
-                  : "/images/logos/horizontal_logo.jpeg"
+                  ? "/images/vertical_logo.png"
+                  : "/images/logos/horizontal_logo.png"
               }
               alt="logo"
-              style={{ height: 80, width: "auto" }}
+              style={{ height: 80, width: "auto", padding: "10px 0" }}
             />
           </Box>
 

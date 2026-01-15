@@ -35,16 +35,18 @@ function App() {
   console.log("Current location:", location.pathname);
   const isAdminRoute = isDashboardPage(location.pathname);
   return (
-    <Box
-      component="main"
-      sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
-    >
+    <>
       <Navbar />
-      <Box sx={{ flexGrow: 1 }}>
-        <Routes>{renderRoutes(routes)}</Routes>
+      <Box
+        component="main"
+        sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
+      >
+        <Box sx={{ flexGrow: 1 }}>
+          <Routes>{renderRoutes(routes)}</Routes>
+        </Box>
+        {!isAdminRoute && <Footer />}
       </Box>
-      {!isAdminRoute && <Footer />}
-    </Box>
+    </>
   );
 }
 export default App;

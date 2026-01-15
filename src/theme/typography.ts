@@ -32,8 +32,8 @@ export function responsiveFontSizes({
 }
 // ----------------------------------------------------------------------
 
-const FONT_PRIMARY = 'DM Sans, sans-serif'
-const FONT_DISPLAY = 'Lato, DM Sans, sans-serif'
+const FONT_PRIMARY = 'Verdana, sans-serif'
+const FONT_DISPLAY = 'Verdana, sans-serif'
 
 // const FONT_SECONDARY = 'CircularStd, sans-serif'; // Local Font
 
