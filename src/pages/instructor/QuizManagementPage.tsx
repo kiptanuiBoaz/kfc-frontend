@@ -70,13 +70,19 @@ export const QuizManagementPage: React.FC = () => {
   });
 
   const handleOpenCreateDialog = () => {
+    setCreateDialogOpen(false);
     setEditingQuestion(null);
-    setCreateDialogOpen(true);
+    setTimeout(() => {
+      setCreateDialogOpen(true);
+    }, 0);
   };
 
   const handleOpenEditDialog = (question: TCourseQuestion) => {
-    setEditingQuestion(question);
-    setCreateDialogOpen(true);
+    setCreateDialogOpen(false);
+    setTimeout(() => {
+      setEditingQuestion(question);
+      setCreateDialogOpen(true);
+    }, 0);
   };
 
   const handleCloseDialog = () => {
