@@ -12,7 +12,7 @@ export default function LandingPage() {
       <Hero />
       <Categories />
       <FeaturedCourses />
-      <Footer />
+      {/* <Footer /> */}
     </Box>
   );
 }
