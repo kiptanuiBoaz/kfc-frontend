@@ -29,7 +29,12 @@ const FeaturedCourses = () => {
     return (
       <CustomContainer>
         <Box>
-          <Typography gutterBottom textAlign={"center"} variant="h3">
+          <Typography
+            color="primary"
+            gutterBottom
+            textAlign={"center"}
+            variant="h3"
+          >
             Our Featured Courses
           </Typography>
           <Typography
