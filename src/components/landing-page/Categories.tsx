@@ -125,7 +125,8 @@ export default function Categories() {
                       flexDirection: "column",
                       alignItems: "center",
                       textAlign: "center",
-                      p: 4,
+                      py: 4,
+                      px: 2,
                     }}
                   >
                     <Box
