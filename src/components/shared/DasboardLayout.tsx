@@ -75,7 +75,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           <Box component="span" sx={{ display: "inline-flex" }}>
             <img src="/images/logo.png" alt="logo" style={{ height: 36 }} />
           </Box>
-          FPC Academy
+          KFC Academy
         </Typography>
       </Box>
       <Divider />

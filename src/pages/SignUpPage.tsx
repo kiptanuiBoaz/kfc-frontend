@@ -29,7 +29,7 @@ import { Notify } from "notiflix";
 const SignUpPage: React.FC = () => {
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(
-    null
+    null,
   );
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
@@ -47,7 +47,7 @@ const SignUpPage: React.FC = () => {
         await apiClient.post("/main/v1/user/register/", values);
 
         Notify.success(
-          "Account created successfully. Please check your email for the verification code."
+          "Account created successfully. Please check your email for the verification code.",
         );
 
         setErrorMessage(null);
@@ -80,7 +80,7 @@ const SignUpPage: React.FC = () => {
                 Create Your Account
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Join FPC Academy to access personalized courses and resources.
+                Join KFC Academy to access personalized courses and resources.
               </Typography>
             </Stack>
 
@@ -102,7 +102,7 @@ const SignUpPage: React.FC = () => {
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     error={Boolean(
-                      formik.touched.first_name && formik.errors.first_name
+                      formik.touched.first_name && formik.errors.first_name,
                     )}
                     helperText={
                       formik.touched.first_name && formik.errors.first_name
@@ -120,7 +120,7 @@ const SignUpPage: React.FC = () => {
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     error={Boolean(
-                      formik.touched.last_name && formik.errors.last_name
+                      formik.touched.last_name && formik.errors.last_name,
                     )}
                     helperText={
                       formik.touched.last_name && formik.errors.last_name
@@ -152,7 +152,7 @@ const SignUpPage: React.FC = () => {
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     error={Boolean(
-                      formik.touched.phone_number && formik.errors.phone_number
+                      formik.touched.phone_number && formik.errors.phone_number,
                     )}
                     helperText={
                       formik.touched.phone_number && formik.errors.phone_number
@@ -171,7 +171,7 @@ const SignUpPage: React.FC = () => {
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     error={Boolean(
-                      formik.touched.password && formik.errors.password
+                      formik.touched.password && formik.errors.password,
                     )}
                     helperText={
                       formik.touched.password && formik.errors.password
@@ -213,7 +213,7 @@ const SignUpPage: React.FC = () => {
                     onBlur={formik.handleBlur}
                     error={Boolean(
                       formik.touched.confirmPassword &&
-                        formik.errors.confirmPassword
+                      formik.errors.confirmPassword,
                     )}
                     helperText={
                       formik.touched.confirmPassword &&
