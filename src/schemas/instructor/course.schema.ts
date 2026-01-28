@@ -5,6 +5,10 @@ export const CourseSchema = Yup.object().shape({
         .min(1, 'Title is required')
         .max(200, 'Title must be less than 200 characters')
         .required('Title is required'),
+    category: Yup.string()
+        .min(1, 'Category is required')
+        .max(200, 'Category must be less than 200 characters')
+        .required('Category is required'),
     description: Yup.string()
         .required('Description is required'),
     tags: Yup.array()

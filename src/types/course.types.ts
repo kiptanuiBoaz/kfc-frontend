@@ -1,3 +1,4 @@
+import { categories } from './../lib/categories';
 import { TQuiz } from "@/types/quiz.types";
 
 export type TCourse = {
@@ -13,6 +14,7 @@ export type TCourse = {
     isFeatured: boolean,
     image?: string,
     status: string,
+    category: string,
     instructor: number | null,
     total_duration?: string,
     course_progress?: number,
@@ -113,6 +115,7 @@ export interface TCoursePrviewDetails {
     tags: string[],
     expertise_level: string,
     prerequisites: string[],
+    category: string,
     objectives: string[],
     isPaid: boolean,
     amount: string | null,
@@ -160,6 +163,7 @@ export interface TEnrolledCourse {
     guid: string,
     title: string,
     description: string,
+    category: string,
     image: string | null,
     status: string,
     enrolled_at: string,

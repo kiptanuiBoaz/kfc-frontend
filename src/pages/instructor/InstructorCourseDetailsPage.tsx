@@ -54,7 +54,7 @@ export const InstructorCourseDetailsPage: React.FC = () => {
   const [topicDialogModule, setTopicDialogModule] =
     useState<TCourseModule | null>(null);
   const [topicDialogData, setTopicDialogData] = useState<TModuleTopic | null>(
-    null
+    null,
   );
   const [newComment, setNewComment] = useState("");
 
@@ -95,7 +95,7 @@ export const InstructorCourseDetailsPage: React.FC = () => {
 
   const handleOpenTopicDialog = (
     module: TCourseModule,
-    topic?: TModuleTopic | null
+    topic?: TModuleTopic | null,
   ) => {
     setTopicDialogModule(module);
     setTopicDialogData(topic ?? null);
@@ -130,7 +130,7 @@ export const InstructorCourseDetailsPage: React.FC = () => {
       value: `${course?.modules?.length || 0} modules / ${
         course?.modules?.reduce(
           (total, current) => total + (current.topics?.length ?? 0),
-          0
+          0,
         ) || 0
       } topics`,
     },
@@ -162,6 +162,9 @@ export const InstructorCourseDetailsPage: React.FC = () => {
                         sx={{ ml: 2, mt: 1 }}
                       />
                     </Stack>
+                    <Typography variant="subtitle1" gutterBottom>
+                      {course.category}
+                    </Typography>
                     <Typography variant="body1" color="text.secondary">
                       {course.description}
                     </Typography>
@@ -249,7 +252,7 @@ export const InstructorCourseDetailsPage: React.FC = () => {
                       ? course.modules.reduce(
                           (total, current) =>
                             total + (current.topics?.length ?? 0),
-                          0
+                          0,
                         )
                       : 0
                   }
@@ -266,7 +269,7 @@ export const InstructorCourseDetailsPage: React.FC = () => {
                       ? course.modules.reduce(
                           (total, current) =>
                             total + (current.topics?.length ?? 0),
-                          0
+                          0,
                         )
                       : 0
                   }

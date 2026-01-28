@@ -62,6 +62,7 @@ const InstructorCourses = () => {
     data: instructorCourses,
     isLoading: coursesLoading,
     isError,
+    refetch,
   } = useQuery<TCoursePrviewDetails[]>({
     queryKey: ["instructorCourses"],
     queryFn: async () =>
@@ -72,7 +73,7 @@ const InstructorCourses = () => {
 
   const activeCourse = useMemo(
     () => courses.find((course) => course.guid === menuCourseGuid) || null,
-    [courses, menuCourseGuid]
+    [courses, menuCourseGuid],
   );
 
   const handleCreateCourse = () => {
@@ -86,12 +87,13 @@ const InstructorCourses = () => {
   };
 
   const handleModalSuccess = () => {
+    refetch();
     navigate("/instructor/courses");
   };
 
   const handleMenuOpen = (
     event: React.MouseEvent<HTMLButtonElement>,
-    courseGuid: string
+    courseGuid: string,
   ) => {
     setMenuAnchorEl(event.currentTarget);
     setMenuCourseGuid(courseGuid);
@@ -190,6 +192,7 @@ const InstructorCourses = () => {
               alignItems: "center",
               justifyContent: "space-between",
               mb: 1,
+              mt: 2,
             }}
           >
             <Typography variant="h4">My Courses</Typography>

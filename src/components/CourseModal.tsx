@@ -32,6 +32,7 @@ import {
   CURRENCIES,
   CourseInitialValues,
 } from "@/schemas/instructor/course.schema";
+import { categories } from "@/lib/categories";
 import { apiClient } from "@/api/apiClient";
 import { useUser } from "@/hooks/useAuth";
 import { Report } from "notiflix/build/notiflix-report-aio";
@@ -92,7 +93,7 @@ export const CourseModal: React.FC<CourseModalProps> = ({
         Report.success(
           isEdit ? "Course Updated" : "Course Created",
           `Course has been ${isEdit ? "updated" : "created"} successfully!`,
-          "OK"
+          "OK",
         );
 
         setErrorMessage(null);
@@ -268,7 +269,7 @@ export const CourseModal: React.FC<CourseModalProps> = ({
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     error={Boolean(
-                      formik.touched.description && formik.errors.description
+                      formik.touched.description && formik.errors.description,
                     )}
                     helperText={
                       formik.touched.description &&
@@ -292,6 +293,33 @@ export const CourseModal: React.FC<CourseModalProps> = ({
                         </MenuItem>
                       ))}
                     </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>Category</InputLabel>
+                    <Select
+                      name="category"
+                      value={formik.values.category || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      label="Category"
+                      required
+                      error={Boolean(
+                        formik.touched.category && formik.errors.category,
+                      )}
+                    >
+                      {categories.map((cat) => (
+                        <MenuItem key={cat} value={cat}>
+                          {cat}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    {formik.touched.category && formik.errors.category && (
+                      <Typography variant="caption" color="error">
+                        {formik.errors.category as string}
+                      </Typography>
+                    )}
                   </FormControl>
                 </Grid>
               </Grid>
@@ -329,7 +357,7 @@ export const CourseModal: React.FC<CourseModalProps> = ({
                     placeholder="Add a prerequisite"
                     error={Boolean(
                       formik.touched.prerequisites &&
-                        formik.errors.prerequisites
+                      formik.errors.prerequisites,
                     )}
                     helperText={
                       formik.touched.prerequisites &&
@@ -346,7 +374,7 @@ export const CourseModal: React.FC<CourseModalProps> = ({
                     }
                     placeholder="Add a learning objective"
                     error={Boolean(
-                      formik.touched.objectives && formik.errors.objectives
+                      formik.touched.objectives && formik.errors.objectives,
                     )}
                     helperText={
                       formik.touched.objectives &&
@@ -390,7 +418,7 @@ export const CourseModal: React.FC<CourseModalProps> = ({
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                         error={Boolean(
-                          formik.touched.amount && formik.errors.amount
+                          formik.touched.amount && formik.errors.amount,
                         )}
                         helperText={
                           formik.touched.amount &&
@@ -402,7 +430,7 @@ export const CourseModal: React.FC<CourseModalProps> = ({
                       <FormControl
                         fullWidth
                         error={Boolean(
-                          formik.touched.currency && formik.errors.currency
+                          formik.touched.currency && formik.errors.currency,
                         )}
                       >
                         <InputLabel>Currency *</InputLabel>
@@ -454,8 +482,8 @@ export const CourseModal: React.FC<CourseModalProps> = ({
               ? "Updating..."
               : "Creating..."
             : isEdit
-            ? "Update Course"
-            : "Create Course"}
+              ? "Update Course"
+              : "Create Course"}
         </Button>
       </DialogActions>
     </Dialog>

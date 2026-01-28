@@ -168,6 +168,7 @@ const Navbar: React.FC = () => {
           anchorEl={anchorEl}
           onClose={handleProfileMenuClose}
           onOpen={handleProfileMenuOpen}
+          isScrolled={isScrolled}
         />
       ) : (
         <Stack direction="row" spacing={2}>

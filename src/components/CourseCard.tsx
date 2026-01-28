@@ -94,9 +94,15 @@ const CourseCard: React.FC<CourseCardProps> = ({
       </Box>
       <CardContent sx={{ flexGrow: 1 }}>
         <Stack spacing={1.5}>
-          <Typography variant="h6" component="h3" sx={{ fontWeight: 700 }}>
-            {truncateString(title, 50)}
+          <Typography
+            color="primary"
+            variant="h6"
+            component="h3"
+            sx={{ fontWeight: 700 }}
+          >
+            {truncateString(title, 75)}
           </Typography>
+          <Typography variant="subtitle2"> {course.category}</Typography>
           <Typography variant="body2" color="text.secondary">
             {truncateString(description, 200)}
           </Typography>

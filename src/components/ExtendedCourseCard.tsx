@@ -108,8 +108,12 @@ const ExtendedCourseCard: React.FC<ExtendedCourseCardProps> = ({
         <Stack spacing={2}>
           <Stack spacing={1}>
             <Typography variant="h6" sx={{ fontWeight: 700 }}>
-              {truncateString(course.title, 50)}
+              {truncateString(course.title, 75)}
             </Typography>
+            <Typography variant="subtitle2" color="text.secondary">
+              {course.category}
+            </Typography>
+
             <Typography variant="body2" color="text.secondary">
               {truncateString(course.description, 150)}
             </Typography>

@@ -52,6 +52,7 @@ interface UserProfileMenuProps {
   onClose: () => void;
   onOpen: (event: React.MouseEvent<HTMLElement>) => void;
   size?: "small" | "medium";
+  isScrolled?: boolean;
 }
 
 export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
@@ -59,6 +60,7 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
   onClose,
   onOpen,
   size = "medium",
+  isScrolled = false,
 }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
@@ -82,7 +84,7 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
       }
       return apiClient.patch<TImageUpdateRes>(
         `/main/v1/user/update/${user.guid}/`,
-        values
+        values,
       );
     },
     onSuccess: (updatedUser, variables) => {
@@ -124,7 +126,7 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
-        }
+        },
       );
 
       if (!res?.image) {
@@ -232,7 +234,7 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
           borderRadius: 5,
           cursor: "pointer",
           "& .MuiChip-deleteIcon": {
-            color: "inherit",
+            color: isScrolled ? "#ffff" : "inherit",
           },
         }}
       />
@@ -410,7 +412,7 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   error={Boolean(
-                    formik.touched.first_name && formik.errors.first_name
+                    formik.touched.first_name && formik.errors.first_name,
                   )}
                   helperText={
                     formik.touched.first_name && formik.errors.first_name
@@ -427,7 +429,7 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   error={Boolean(
-                    formik.touched.last_name && formik.errors.last_name
+                    formik.touched.last_name && formik.errors.last_name,
                   )}
                   helperText={
                     formik.touched.last_name && formik.errors.last_name
@@ -445,7 +447,7 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
                   }
                   onBlur={formik.handleBlur}
                   error={Boolean(
-                    formik.touched.phone_number && formik.errors.phone_number
+                    formik.touched.phone_number && formik.errors.phone_number,
                   )}
                   helperText={
                     formik.touched.phone_number && formik.errors.phone_number

@@ -24,7 +24,7 @@ import {
   IconButton,
   useMediaQuery,
 } from "@mui/material";
-import { CheckCircle2, Clock, Star, Info } from "lucide-react";
+import { CheckCircle2, Clock, Star, Info, Calendar } from "lucide-react";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -55,7 +55,7 @@ export const CoursePreviewPage = () => {
     enabled: !!courseGuid,
     queryFn: async () =>
       await apiClient.get<TCoursePrviewDetails>(
-        `/main/v1/courses/${courseGuid}/`
+        `/main/v1/courses/${courseGuid}/`,
       ),
   });
 
@@ -108,43 +108,81 @@ export const CoursePreviewPage = () => {
         {/* Header Section */}
         <Paper
           sx={{
-            p: { xs: 2, sm: 3, md: 4 },
+            p: { xs: 1, sm: 2, md: 4 },
             borderRadius: 3,
             backgroundColor: "grey.50",
           }}
         >
-          <Grid container spacing={{ xs: 2, md: 4 }} alignItems="center">
-            <Grid item xs={12} md={4}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", md: "row" },
+              alignItems: { xs: "stretch", md: "center" },
+              gap: { xs: 2, md: 4 },
+            }}
+          >
+            <Box
+              sx={{
+                width: { xs: "100%", md: 340 },
+                minWidth: 0,
+                mb: { xs: 2, md: 0 },
+                alignSelf: { xs: "center", md: "flex-start" },
+                display: "flex",
+                justifyContent: "center",
+              }}
+            >
               <Box
                 component="img"
                 src={`/images/${course.guid}.jpg`}
                 alt={course.title}
                 sx={{
-                  width: "100%",
-                  height: { xs: 180, sm: 220, md: 250 },
+                  width: { xs: "100%", sm: 320, md: 340 },
+                  maxWidth: { xs: "100%", sm: 320, md: 340 },
+                  height: { xs: 160, sm: 200, md: 250 },
                   objectFit: "cover",
                   borderRadius: 2,
-                  mb: { xs: 2, md: 0 },
+                  boxShadow: { xs: 1, md: 2 },
                 }}
               />
-            </Grid>
-            <Grid item xs={12} md={8} sx={{ backgroundColor: "gray.50" }}>
-              <Stack spacing={2}>
+            </Box>
+            <Box
+              sx={{
+                flex: 1,
+                backgroundColor: { xs: "transparent", md: "gray.50" },
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+              }}
+            >
+              <Stack spacing={2} sx={{ width: "100%" }}>
                 <Typography
-                  variant="h3"
+                  variant="h4"
                   fontWeight={700}
-                  gutterBottom
                   sx={{
-                    fontSize: { xs: "1.5rem", sm: "2rem", md: "2.5rem" },
+                    fontSize: { xs: "1.3rem", sm: "1.7rem", md: "2.2rem" },
                     textAlign: { xs: "center", md: "left" },
+                    wordBreak: "break-word",
                   }}
                 >
                   {course.title}
                 </Typography>
+                <Typography
+                  variant="subtitle1"
+                  gutterBottom
+                  sx={{ textAlign: { xs: "center", md: "left" } }}
+                >
+                  {course.category}
+                </Typography>
+                <Stack spacing={2} direction={"row"}>
+                  <Calendar style={{ fontSize: "10px" }} />
+                  <Typography variant="body2" color="text.secondary">
+                    Created: {new Date(course.created_at).toLocaleDateString()}
+                  </Typography>
+                </Stack>
 
                 <Stack
                   direction={{ xs: "column", sm: "row" }}
-                  alignItems={{ xs: "flex-start", sm: "center" }}
+                  alignItems={{ xs: "center", sm: "center" }}
                   spacing={2}
                   sx={{
                     justifyContent: { xs: "center", md: "flex-start" },
@@ -152,10 +190,11 @@ export const CoursePreviewPage = () => {
                   }}
                 >
                   <Stack
-                    // @ts-ignore
-                    direction={isMobile ? "auto" : "row"}
+                    direction={"row"}
                     alignItems="center"
+                    flexWrap={"wrap"}
                     spacing={1}
+                    flex={1}
                   >
                     <Chip
                       size={isMobile ? "small" : "medium"}
@@ -202,19 +241,6 @@ export const CoursePreviewPage = () => {
                         bgcolor: alpha(theme.palette.primary.main, 0.12),
                         color: theme.palette.primary.main,
                       }}
-                      label={
-                        "Created on " +
-                        new Date(course.created_at).toLocaleDateString()
-                      }
-                      icon={<CheckCircle2 size={18} />}
-                    />
-
-                    <Chip
-                      size={isMobile ? "small" : "medium"}
-                      sx={{
-                        bgcolor: alpha(theme.palette.primary.main, 0.12),
-                        color: theme.palette.primary.main,
-                      }}
                       icon={<Clock size={18} />}
                       label={
                         course.total_duration === "0h"
@@ -223,10 +249,8 @@ export const CoursePreviewPage = () => {
                       }
                     />
                   </Stack>
-
                   {!isEnrolled && (
                     <>
-                      {" "}
                       {course.isPaid && course.amount && (
                         <Typography variant="h6" color="primary">
                           {course.currency ?? "USD"} {course.amount}
@@ -236,12 +260,10 @@ export const CoursePreviewPage = () => {
                     </>
                   )}
                 </Stack>
-
                 <Divider sx={{ display: { xs: "none", sm: "block" } }} />
-
                 <Stack
                   direction={{ xs: "column", sm: "row" }}
-                  alignItems={{ xs: "flex-start", sm: "center" }}
+                  alignItems={{ xs: "center", sm: "center" }}
                   justifyContent="space-between"
                   spacing={2}
                   mt={2}
@@ -251,7 +273,10 @@ export const CoursePreviewPage = () => {
                     direction="row"
                     alignItems="center"
                     spacing={2}
-                    sx={{ width: { xs: "100%", sm: "auto" } }}
+                    sx={{
+                      width: { xs: "100%", sm: "auto" },
+                      justifyContent: { xs: "center", sm: "flex-start" },
+                    }}
                   >
                     <Avatar
                       src={`${MEDIA_BASE_URL}${course.instructor_details.image}`}
@@ -264,11 +289,10 @@ export const CoursePreviewPage = () => {
                         {course.instructor_details?.last_name}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {course.instructor_details?.bio}
+                        {course.instructor_details?.bio || " Instructor"}
                       </Typography>
                     </Box>
                   </Stack>
-
                   <Box sx={{ width: { xs: "100%", sm: "auto" } }}>
                     <Button
                       sx={{
@@ -286,8 +310,8 @@ export const CoursePreviewPage = () => {
                   </Box>
                 </Stack>
               </Stack>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
         </Paper>
         {/* About Section */}
         <Grid container spacing={{ xs: 2, md: 4 }}>
@@ -352,7 +376,7 @@ export const CoursePreviewPage = () => {
                     {course.modules.length} modules •{" "}
                     {course.modules.reduce(
                       (total, module) => total + (module.topics?.length || 0),
-                      0
+                      0,
                     )}{" "}
                     topics
                   </Typography>
