@@ -23,6 +23,7 @@ import { PATHS } from "@/navigation/paths";
 import { TCourseModule, TModuleTopic } from "@/types/course.types";
 import { TTopicMediaSelection } from "@/types/media.types";
 import { useAuth } from "@/hooks/useAuth";
+import { truncateString } from "@/utils/truncateString";
 
 interface ModuleTopicListProps {
   modules: TCourseModule[];
@@ -42,15 +43,15 @@ const ModuleTopicList: React.FC<ModuleTopicListProps> = ({
   const navigate = useNavigate();
   const { user } = useAuth();
   const [expandedModules, setExpandedModules] = React.useState<Set<string>>(
-    () => new Set(currentModule ? [currentModule] : [])
+    () => new Set(currentModule ? [currentModule] : []),
   );
   const [expandedTopics, setExpandedTopics] = React.useState<Set<string>>(
-    () => new Set()
+    () => new Set(),
   );
 
   const modulesWithTopics = React.useMemo(
     () => modules.filter((module) => (module.topics?.length || 0) > 0),
-    [modules]
+    [modules],
   );
 
   const handleModuleToggle = (moduleGuid: string) => {
@@ -117,8 +118,8 @@ const ModuleTopicList: React.FC<ModuleTopicListProps> = ({
     navigate(
       PATHS.TAKE_QUIZ_PAGE.replace(":moduleGuid", moduleGuid).replace(
         ":quizGuid",
-        quizGuid
-      )
+        quizGuid,
+      ),
     );
   };
 
@@ -248,16 +249,9 @@ const ModuleTopicList: React.FC<ModuleTopicListProps> = ({
                           </Box>
                           <Box flexGrow={1}>
                             <Typography variant="body2" color="text.secondary">
-                              {topic.name || "Untitled topic"}
+                              {truncateString(topic.name, 100) ||
+                                "Untitled topic"}
                             </Typography>
-                            {topic.description && (
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                              >
-                                {topic.description}
-                              </Typography>
-                            )}
                           </Box>
                           <Stack
                             direction="row"
@@ -293,6 +287,15 @@ const ModuleTopicList: React.FC<ModuleTopicListProps> = ({
                             mt={1.5}
                             onClick={(event) => event.stopPropagation()}
                           >
+                            {" "}
+                            {topic.description && (
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                {topic.description}
+                              </Typography>
+                            )}
                             <TopicMediaContent
                               topicGuid={topic.guid}
                               expanded={isExpanded}

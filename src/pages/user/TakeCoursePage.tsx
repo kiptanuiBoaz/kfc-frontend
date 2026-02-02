@@ -40,16 +40,16 @@ const TakeCoursePage = () => {
     enabled: !!courseGuid,
     queryFn: async () =>
       await apiClient.get<TCoursePrviewDetails>(
-        `/main/v1/courses/${courseGuid}/`
+        `/main/v1/courses/${courseGuid}/`,
       ),
   });
 
   const modulesWithTopics = useMemo(
     () =>
       (course?.modules || []).filter(
-        (module) => module.topics && module.topics.length > 0
+        (module) => module.topics && module.topics.length > 0,
       ),
-    [course]
+    [course],
   );
 
   const firstPlayable = useMemo(() => {
@@ -80,7 +80,7 @@ const TakeCoursePage = () => {
     const module = modulesWithTopics.find((m) => m.guid === moduleGuid);
     if (module) {
       const topicExists = module.topics?.some(
-        (topic) => topic.guid === topicGuid
+        (topic) => topic.guid === topicGuid,
       );
       if (!topicExists) {
         topicGuid = module.topics?.[0]?.guid || null;
@@ -155,7 +155,7 @@ const TakeCoursePage = () => {
   return (
     <CustomContainer>
       <Grid sx={{ mt: 2 }} container spacing={2}>
-        <Grid item xs={12} md={8}>
+        <Grid item xs={12} md={7}>
           <Stack spacing={2}>
             <CourseHeader
               course={course}
@@ -165,7 +165,7 @@ const TakeCoursePage = () => {
                   ? () =>
                       handleTopicSelection(
                         firstPlayable.moduleGuid!,
-                        firstPlayable.topicGuid!
+                        firstPlayable.topicGuid!,
                       )
                   : undefined
               }
@@ -178,7 +178,7 @@ const TakeCoursePage = () => {
             )}
           </Stack>
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={5}>
           <ModuleTopicList
             modules={modulesWithTopics}
             currentModule={currentModule}
