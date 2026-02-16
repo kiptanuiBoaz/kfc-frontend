@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        BUILD_DIR = 'build'          
+        BUILD_DIR = 'dist'          
         REMOTE_PATH = '/var/www/html'
     }
     stages {
