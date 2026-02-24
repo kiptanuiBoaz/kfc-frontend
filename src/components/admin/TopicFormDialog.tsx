@@ -19,7 +19,7 @@ import { Notify } from "notiflix";
 import { TCourseModule, TModuleTopic } from "@/types/course.types";
 
 const convertDurationToMinutes = (
-  duration?: string | number | null
+  duration?: string | number | null,
 ): string => {
   if (duration === null || duration === undefined) {
     return "";
@@ -39,7 +39,10 @@ const convertDurationToMinutes = (
     }
 
     const timeParts = duration.split(":").map((part) => Number(part));
-    if (timeParts.length >= 2 && timeParts.every((part) => Number.isFinite(part))) {
+    if (
+      timeParts.length >= 2 &&
+      timeParts.every((part) => Number.isFinite(part))
+    ) {
       const [hours = 0, minutes = 0, seconds = 0] = timeParts;
       const totalMinutes = hours * 60 + minutes + Math.round(seconds / 60);
       return String(totalMinutes);
@@ -48,6 +51,7 @@ const convertDurationToMinutes = (
 
   return "";
 };
+//comment
 
 const convertMinutesToDurationString = (value?: string | number): string => {
   const minutes = typeof value === "number" ? value : Number(value);
@@ -93,7 +97,7 @@ export const TopicFormDialog: React.FC<TopicFormDialogProps> = ({
             duration: convertDurationToMinutes(topic.duration),
           }
         : { ...ModuleTopicInitialValues },
-    [topic]
+    [topic],
   );
 
   const formik = useFormik({
@@ -112,7 +116,7 @@ export const TopicFormDialog: React.FC<TopicFormDialogProps> = ({
         if (isEditMode && topic) {
           await apiClient.patch(
             `/main/v1/topics/${topic.guid}/update/`,
-            payload
+            payload,
           );
           Notify.success("Topic updated successfully");
         } else if (module?.guid) {
@@ -146,8 +150,8 @@ export const TopicFormDialog: React.FC<TopicFormDialogProps> = ({
   const dialogTitle = moduleName
     ? `${isEditMode ? "Update" : "Add"} topic for ${moduleName}`
     : isEditMode
-    ? "Update topic"
-    : "Add topic";
+      ? "Update topic"
+      : "Add topic";
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -175,7 +179,7 @@ export const TopicFormDialog: React.FC<TopicFormDialogProps> = ({
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
             error={Boolean(
-              formik.touched.description && formik.errors.description
+              formik.touched.description && formik.errors.description,
             )}
             helperText={
               formik.touched.description &&
@@ -222,8 +226,8 @@ export const TopicFormDialog: React.FC<TopicFormDialogProps> = ({
               ? "Updating..."
               : "Saving..."
             : isEditMode
-            ? "Update topic"
-            : "Save topic"}
+              ? "Update topic"
+              : "Save topic"}
         </Button>
       </DialogActions>
     </Dialog>
