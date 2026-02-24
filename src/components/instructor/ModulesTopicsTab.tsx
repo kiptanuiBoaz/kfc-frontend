@@ -25,7 +25,7 @@ interface ModulesTopicsTabProps {
   onOpenModuleDialog: (module?: TCourseModule | null) => void;
   onOpenTopicDialog: (
     module: TCourseModule,
-    topic?: TModuleTopic | null
+    topic?: TModuleTopic | null,
   ) => void;
 }
 
@@ -216,7 +216,7 @@ export const ModulesTopicsTab: React.FC<ModulesTopicsTabProps> = ({
                           </Typography>
                           {topic.duration && (
                             <Chip
-                              label={`${topic.duration} min`}
+                              label={`${topic.duration} `}
                               size="small"
                               color="default"
                               variant="outlined"
