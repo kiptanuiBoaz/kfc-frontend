@@ -251,23 +251,21 @@ const InstructorCourses = () => {
                           : "--"}
                       </TableCell>
                       <TableCell align="right">
-                        <Tooltip title="Course actions">
-                          <span>
-                            <IconButton
-                              onClick={(event) =>
-                                handleMenuOpen(event, course.guid)
-                              }
-                              aria-haspopup="true"
-                              aria-controls={
-                                menuAnchorEl && menuCourseGuid === course.guid
-                                  ? "instructor-course-menu"
-                                  : undefined
-                              }
-                            >
-                              <MoreVertical size={18} />
-                            </IconButton>
-                          </span>
-                        </Tooltip>
+                        <span>
+                          <IconButton
+                            onClick={(event) =>
+                              handleMenuOpen(event, course.guid)
+                            }
+                            aria-haspopup="true"
+                            aria-controls={
+                              menuAnchorEl && menuCourseGuid === course.guid
+                                ? "instructor-course-menu"
+                                : undefined
+                            }
+                          >
+                            <MoreVertical size={18} />
+                          </IconButton>
+                        </span>
                       </TableCell>
                     </TableRow>
                   ))}

@@ -2,7 +2,7 @@ import { alpha } from "@mui/material";
 
 export
     const PRIMARTY = {
-        lighter: '#408F7E',
+        lighter: '#6e9990',
         light: '#007C69',
         main: '#006953',
         dark: '#005C49',

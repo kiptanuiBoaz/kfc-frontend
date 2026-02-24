@@ -1,4 +1,4 @@
-import { CloseIcon } from './CustomIcons';
+import { CloseIcon } from "./CustomIcons";
 
 // ----------------------------------------------------------------------
 
@@ -17,29 +17,29 @@ export default function Chip(theme: any) {
           paddingRight: theme.spacing(1),
         },
         colorDefault: {
-          '& .MuiChip-avatarMedium, .MuiChip-avatarSmall': {
+          "& .MuiChip-avatarMedium, .MuiChip-avatarSmall": {
             color: theme.palette.text.secondary,
           },
         },
         outlined: {
-          borderColor: 'transparent', // No border
-          '&.MuiChip-colorPrimary': {
+          borderColor: "transparent", // No border
+          "&.MuiChip-colorPrimary": {
             backgroundColor: theme.palette.primary.lighter, // Lighter background color
           },
-          '&.MuiChip-colorSecondary': {
+          "&.MuiChip-colorSecondary": {
             backgroundColor: theme.palette.secondary.lighter, // Lighter background color
           },
-          '&.MuiChip-colorInfo': {
+          "&.MuiChip-colorInfo": {
             backgroundColor: theme.palette.info.lighter, // Lighter background color
           },
-          '&.MuiChip-colorSuccess': {
+          "&.MuiChip-colorSuccess": {
             backgroundColor: theme.palette.success.lighter, // Lighter background color
           },
-          '&.MuiChip-colorWarning': {
+          "&.MuiChip-colorWarning": {
             backgroundColor: theme.palette.warning.lighter, // Lighter background color
-            color: theme.palette.warning.main
+            color: theme.palette.warning.main,
           },
-          '&.MuiChip-colorError': {
+          "&.MuiChip-colorError": {
             backgroundColor: theme.palette.error.lighter, // Lighter background color
           },
         },
