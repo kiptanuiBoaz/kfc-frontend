@@ -218,7 +218,8 @@ const InstructorCourses = () => {
                     <TableCell>#</TableCell>
                     <TableCell>Course</TableCell>
                     <TableCell>Status</TableCell>
-                    <TableCell>Type</TableCell>
+                    <TableCell>Price</TableCell>
+                    <TableCell>Total Duration</TableCell>
                     <TableCell>Created</TableCell>
                     <TableCell align="right">Actions</TableCell>
                   </TableRow>
@@ -245,6 +246,7 @@ const InstructorCourses = () => {
                           ? `${course.currency ?? "USD"} ${course.amount}`
                           : "Free"}
                       </TableCell>
+                      <TableCell>{course.total_duration}</TableCell>
                       <TableCell>
                         {course.created_at
                           ? dayjs(course.created_at).format("MMM D, YYYY")

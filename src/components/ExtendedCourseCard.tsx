@@ -138,7 +138,7 @@ const ExtendedCourseCard: React.FC<ExtendedCourseCardProps> = ({
                     color="disabled"
                   />
                   <Typography variant="body2" color="text.secondary">
-                    {course.total_duration} weeks
+                    {course.total_duration}
                   </Typography>
                 </>
               )}
