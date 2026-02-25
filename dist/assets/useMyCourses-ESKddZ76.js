@@ -1,1 +1,0 @@
-import{u as s}from"./useQuery-OBKjqWjE.js";import{w as t,t as u}from"./index-CLfcEooC.js";const n=()=>{const e=t();return s({queryKey:["myCourses"],queryFn:async()=>await u.get("/main/v1/my-courses/"),enabled:e})};export{n as u};
