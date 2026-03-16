@@ -81,7 +81,9 @@ const ExtendedCourseCard: React.FC<ExtendedCourseCardProps> = ({
       >
         <Box
           component="img"
-          src={`/images/${course.guid}.jpg`}
+          src={
+            course?.image ? course?.image : "/images/logos/horizontal_logo.png"
+          }
           alt={course.title}
         />
       </Box>
@@ -169,7 +171,11 @@ const ExtendedCourseCard: React.FC<ExtendedCourseCardProps> = ({
             onClick={() => navigate(`/courses/${course.guid}/learn`)}
             fullWidth
           >
-            Continue Learning
+            {course.course_progress && course.course_progress > 0
+              ? course.course_progress < 100
+                ? "Continue Learning"
+                : "Review Course"
+              : "Start Learning"}
           </Button>
         ) : (
           <>

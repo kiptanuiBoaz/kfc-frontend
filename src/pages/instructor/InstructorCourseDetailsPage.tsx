@@ -145,7 +145,7 @@ export const InstructorCourseDetailsPage: React.FC = () => {
               <Grid2 container spacing={2}>
                 <Grid2 size={3}>
                   <img
-                    src={`/images/${course.guid}.jpeg`}
+                    src={course.image ? course.image : "/placeholder.png"}
                     alt={course.title}
                     style={{ width: 320, height: "auto", borderRadius: 8 }}
                   />
@@ -256,6 +256,7 @@ export const InstructorCourseDetailsPage: React.FC = () => {
                         )
                       : 0
                   }
+                  onEdit={handleOpenCourseModal}
                 />
               )}
 

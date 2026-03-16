@@ -14,8 +14,8 @@ import {
   Typography,
 } from "@mui/material";
 import { ExpandMore } from "@mui/icons-material";
-import { useQuery } from "@tanstack/react-query";
-import { Book } from "lucide-react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Book, CheckCircle, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { apiClient } from "@/api/apiClient";
 import MediaPlayer from "@/components/course/MediaPlayer";
@@ -24,6 +24,7 @@ import { TCourseModule, TModuleTopic } from "@/types/course.types";
 import { TTopicMediaSelection } from "@/types/media.types";
 import { useAuth } from "@/hooks/useAuth";
 import { truncateString } from "@/utils/truncateString";
+import { Notify } from "notiflix";
 
 interface ModuleTopicListProps {
   modules: TCourseModule[];
@@ -124,6 +125,67 @@ const ModuleTopicList: React.FC<ModuleTopicListProps> = ({
   };
 
   const isAdmin = user?.role?.name === "ADMIN";
+
+  const getNextTopic = (
+    currentTopicGuid: string,
+  ): { moduleGuid: string; topicGuid: string } | null => {
+    for (let i = 0; i < modulesWithTopics.length; i++) {
+      const module = modulesWithTopics[i];
+      const topics = module.topics || [];
+      for (let j = 0; j < topics.length; j++) {
+        if (topics[j].guid === currentTopicGuid) {
+          // Check if there's a next topic in the same module
+          if (j + 1 < topics.length) {
+            return { moduleGuid: module.guid, topicGuid: topics[j + 1].guid };
+          }
+          // Check if there's a next module with topics
+          if (i + 1 < modulesWithTopics.length) {
+            const nextModule = modulesWithTopics[i + 1];
+            if (nextModule.topics && nextModule.topics.length > 0) {
+              return {
+                moduleGuid: nextModule.guid,
+                topicGuid: nextModule.topics[0].guid,
+              };
+            }
+          }
+          return null;
+        }
+      }
+    }
+    return null;
+  };
+
+  const expandNextTopic = (currentTopicGuid: string) => {
+    const next = getNextTopic(currentTopicGuid);
+    if (next) {
+      handleTopicSelect(next.moduleGuid, next.topicGuid);
+    }
+  };
+
+  const completeTopicMutation = useMutation({
+    mutationFn: async (topicGuid: string) => {
+      return await apiClient.post("/main/v1/topic/complete/", {
+        topic_guid: topicGuid,
+      });
+    },
+    onSuccess: (_, topicGuid) => {
+      Notify.success("Topic completed!");
+      expandNextTopic(topicGuid);
+    },
+    onError: () => {
+      Notify.failure("Failed to complete topic. Please try again.");
+    },
+  });
+
+  const handleCompleteTopic = (topicGuid: string, isCompleted?: boolean) => {
+    if (isCompleted) {
+      // Already completed, just expand next topic
+      expandNextTopic(topicGuid);
+    } else {
+      // Mark as complete, then expand next on success
+      completeTopicMutation.mutate(topicGuid);
+    }
+  };
 
   return (
     <Paper sx={{ p: 3 }}>
@@ -301,6 +363,35 @@ const ModuleTopicList: React.FC<ModuleTopicListProps> = ({
                               expanded={isExpanded}
                               onMediaSelect={onMediaSelect}
                             />
+                            <Box
+                              sx={{
+                                mt: 2,
+                                display: "flex",
+                                justifyContent: "flex-end",
+                              }}
+                            >
+                              <Button
+                                variant="contained"
+                                color="primary"
+                                endIcon={<ChevronRight size={18} />}
+                                onClick={() =>
+                                  handleCompleteTopic(
+                                    topic.guid,
+                                    topic?.is_completed,
+                                  )
+                                }
+                                disabled={
+                                  !topic?.is_completed &&
+                                  completeTopicMutation.isPending
+                                }
+                              >
+                                {topic?.is_completed
+                                  ? "Next"
+                                  : completeTopicMutation.isPending
+                                    ? "Completing..."
+                                    : "Complete & Continue"}
+                              </Button>
+                            </Box>
                           </Box>
                         </Collapse>
                       </Box>

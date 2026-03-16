@@ -26,14 +26,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
   ctaLabel = "Enroll Now",
   href,
 }) => {
-  const {
-    title,
-    description,
-    image = "https://images.unsplash.com/photo-1525791646156-1c04ccf7b6c1?auto=format&fit=crop&w=1000&q=80",
-    isPaid,
-    amount,
-    expertise_level,
-  } = course;
+  const { title, description, image, isPaid, amount, expertise_level } = course;
 
   const handleAction = () => {
     if (onAction) {
@@ -90,7 +83,13 @@ const CourseCard: React.FC<CourseCardProps> = ({
           },
         }}
       >
-        <Box component="img" src={`/images/${course.guid}.jpg`} alt={title} />
+        <Box
+          component="img"
+          src={
+            course?.image ? course?.image : "/images/logos/horizontal_logo.png"
+          }
+          alt={title}
+        />
       </Box>
       <CardContent sx={{ flexGrow: 1 }}>
         <Stack spacing={1.5}>

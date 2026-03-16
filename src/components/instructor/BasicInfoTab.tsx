@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import {
   Box,
+  Button,
   Chip,
   Divider,
   Grid,
@@ -9,25 +10,27 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Edit2 } from "lucide-react";
 import { TCourse } from "@/types/course.types";
 
 interface BasicInfoTabProps {
   course: TCourse;
   totalModules: number;
   totalTopics: number;
+  onEdit?: () => void;
 }
 
 export const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
   course,
   totalModules,
   totalTopics,
+  onEdit,
 }) => {
   const theme = useTheme();
   const renderTagGroup = (
     label: string,
     values?: string[] | null,
-    placeholder = "No data yet"
+    placeholder = "No data yet",
   ) => (
     <Box>
       <Typography variant="subtitle2" color="text.secondary" gutterBottom>
@@ -54,11 +57,24 @@ export const BasicInfoTab: React.FC<BasicInfoTabProps> = ({
         : [
             "No objectives have been added yet. Use the course builder to define learning outcomes and keep this syllabus fresh.",
           ],
-    [course?.objectives]
+    [course?.objectives],
   );
 
   return (
     <Grid container spacing={3} alignItems="flex-start">
+      <Grid item xs={12}>
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+          {onEdit && (
+            <Button
+              variant="outlined"
+              startIcon={<Edit2 size={18} />}
+              onClick={onEdit}
+            >
+              Edit Course
+            </Button>
+          )}
+        </Box>
+      </Grid>
       <Grid item xs={12} lg={8}>
         <Paper sx={{ p: 3, borderRadius: 3, mb: 3 }}>
           <Box sx={{ mb: 4 }}>

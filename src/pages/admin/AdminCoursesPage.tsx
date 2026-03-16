@@ -28,7 +28,7 @@ import { useNavigate } from "react-router-dom";
 import LoadingPage from "@/components/shared/LoadingPage";
 import ErrorPage from "@/pages/errors/ErrorPage";
 import { truncateString } from "@/utils/truncateString";
-
+//local host
 export const AdminCoursesPage: React.FC = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -65,7 +65,7 @@ export const AdminCoursesPage: React.FC = () => {
       Notify.success(
         variables.nextStatus === "PUBLISHED"
           ? "Course approved (Published)"
-          : "Course taken down (Draft)"
+          : "Course taken down (Draft)",
       );
       queryClient.invalidateQueries({ queryKey: ["adminCourses"] });
     },
@@ -94,7 +94,7 @@ export const AdminCoursesPage: React.FC = () => {
       Notify.success(
         variables.nextFeatured
           ? "Course marked as featured"
-          : "Course unfeatured"
+          : "Course unfeatured",
       );
       queryClient.invalidateQueries({ queryKey: ["adminCourses"] });
     },
@@ -131,7 +131,7 @@ export const AdminCoursesPage: React.FC = () => {
 
   const handleMenuOpen = (
     event: React.MouseEvent<HTMLButtonElement>,
-    courseGuid: string
+    courseGuid: string,
   ) => {
     setMenuAnchorEl(event.currentTarget);
     setMenuCourseGuid(courseGuid);
@@ -144,7 +144,7 @@ export const AdminCoursesPage: React.FC = () => {
 
   const activeCourse = React.useMemo(
     () => courses.find((course) => course.guid === menuCourseGuid) || null,
-    [courses, menuCourseGuid]
+    [courses, menuCourseGuid],
   );
 
   const isApprovingSelectedCourse =

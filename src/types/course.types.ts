@@ -57,6 +57,7 @@ export type TModuleTopic = {
     content?: string | null;
     duration?: string;
     order?: number | null;
+    is_completed?: boolean;
     created_at?: string | null;
     updated_at?: string | null;
     files?: string[];

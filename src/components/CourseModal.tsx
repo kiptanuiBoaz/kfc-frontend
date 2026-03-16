@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -37,6 +37,7 @@ import { apiClient } from "@/api/apiClient";
 import { useUser } from "@/hooks/useAuth";
 import { Report } from "notiflix/build/notiflix-report-aio";
 import { ChipInputField } from "@/components/shared/ChipInputFeld";
+import FileUpload from "@/components/shared/FileUpload";
 
 interface CourseModalProps {
   open: boolean;
@@ -54,13 +55,14 @@ export const CourseModal: React.FC<CourseModalProps> = ({
   const isEdit = Boolean(course);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [imageError, setImageError] = useState<string | null>(null);
-  const [isDragOver, setIsDragOver] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [bannerUrls, setBannerUrls] = useState<string[]>(
+    course?.image ? [course.image] : [],
+  );
   const user = useUser();
 
-  type TCourseImageUploadResponse = { image: string };
+  useEffect(() => {
+    setBannerUrls(course?.image ? [course.image] : []);
+  }, [course]);
 
   const formik = useFormik({
     initialValues: course || {
@@ -84,6 +86,7 @@ export const CourseModal: React.FC<CourseModalProps> = ({
           // Convert amount to null if not paid
           amount: values.isPaid ? values.amount : null,
           currency: values.isPaid ? values.currency : null,
+          image: bannerUrls.length > 0 ? bannerUrls[0] : null,
         };
 
         isEdit
@@ -114,6 +117,8 @@ export const CourseModal: React.FC<CourseModalProps> = ({
       }
     },
   });
+
+  console.log("Formik Errors:", formik.errors);
 
   return (
     <Dialog
@@ -147,92 +152,23 @@ export const CourseModal: React.FC<CourseModalProps> = ({
           {successMessage && <Alert severity="success">{successMessage}</Alert>}
 
           <Box component="form" onSubmit={formik.handleSubmit} noValidate>
-            {/* Course Header Image */}
-            {/* <Box sx={{ mb: 3 }}>
+            {/* Course Banner Image */}
+            <Box sx={{ mb: 3 }}>
               <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                Course Header
+                Course Banner
               </Typography>
-              <input
-                type="file"
-                accept="image/*"
-                ref={fileInputRef}
-                style={{ display: "none" }}
-                onChange={handleImageUpload}
-              />
-              <Box
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-                onDragLeave={handleDragLeave}
-                sx={{
-                  p: 3,
-                  border: (theme) =>
-                    `2px dashed ${
-                      isDragOver
-                        ? theme.palette.primary.main
-                        : theme.palette.grey[300]
-                    }`,
-                  borderRadius: 2,
-                  textAlign: "center",
-                  bgcolor: isDragOver ? "primary.lighter" : "background.paper",
-                  cursor: "pointer",
-                  transition:
-                    "border-color 0.2s ease, background-color 0.2s ease",
+              <FileUpload
+                fileType="image"
+                label="Upload Course Banner"
+                description="JPEG, PNG, WEBP (max 100MB)"
+                values={bannerUrls}
+                onChange={(newUrls) => {
+                  setBannerUrls(newUrls);
+                  formik.setFieldValue("image", newUrls[0] || "");
                 }}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Stack
-                  spacing={1.5}
-                  alignItems="center"
-                  justifyContent="center"
-                >
-                  <Box
-                    sx={{
-                      width: 64,
-                      height: 64,
-                      borderRadius: 2,
-                      bgcolor: "primary.light",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "primary.main",
-                    }}
-                  >
-                    <ImageIcon size={32} />
-                  </Box>
-                  <Typography variant="body1" fontWeight={600}>
-                    Drop your image here, or{" "}
-                    <Button variant="text" size="small">
-                      browse
-                    </Button>
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Supports: JPG, JPEG2000, PNG
-                  </Typography>
-                  {formik.values.image && (
-                    <Chip
-                      label="Image set"
-                      color="success"
-                      variant="outlined"
-                      size="small"
-                    />
-                  )}
-                  {uploadingImage && (
-                    <Typography variant="body2" color="text.secondary">
-                      Uploading image...
-                    </Typography>
-                  )}
-                  {imageError && (
-                    <Alert
-                      severity="error"
-                      variant="outlined"
-                      sx={{ width: "100%" }}
-                    >
-                      {imageError}
-                    </Alert>
-                  )}
-                </Stack>
-              </Box>
-            </Box> */}
+                multiple={false}
+              />
+            </Box>
 
             {/* Basic Information */}
             <Box sx={{ mb: 3 }}>

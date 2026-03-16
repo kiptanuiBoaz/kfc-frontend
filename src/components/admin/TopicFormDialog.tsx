@@ -1,14 +1,25 @@
 import React from "react";
 import {
   Alert,
+  Badge,
+  Box,
   Button,
+  Chip,
+  Collapse,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Stack,
   TextField,
+  Typography,
 } from "@mui/material";
+import {
+  Image as ImageIcon,
+  VideoFile,
+  PictureAsPdf,
+  Close,
+} from "@mui/icons-material";
 import { useFormik } from "formik";
 import {
   ModuleTopicInitialValues,
@@ -17,59 +28,7 @@ import {
 import { apiClient } from "@/api/apiClient";
 import { Notify } from "notiflix";
 import { TCourseModule, TModuleTopic } from "@/types/course.types";
-
-const convertDurationToMinutes = (
-  duration?: string | number | null,
-): string => {
-  if (duration === null || duration === undefined) {
-    return "";
-  }
-
-  if (typeof duration === "number" && Number.isFinite(duration)) {
-    return String(duration);
-  }
-
-  if (typeof duration === "string") {
-    if (!duration.trim()) {
-      return "";
-    }
-
-    if (/^\d+$/.test(duration)) {
-      return duration;
-    }
-
-    const timeParts = duration.split(":").map((part) => Number(part));
-    if (
-      timeParts.length >= 2 &&
-      timeParts.every((part) => Number.isFinite(part))
-    ) {
-      const [hours = 0, minutes = 0, seconds = 0] = timeParts;
-      const totalMinutes = hours * 60 + minutes + Math.round(seconds / 60);
-      return String(totalMinutes);
-    }
-  }
-
-  return "";
-};
-//comment
-
-const convertMinutesToDurationString = (value?: string | number): string => {
-  const minutes = typeof value === "number" ? value : Number(value);
-
-  if (!Number.isFinite(minutes) || minutes < 0) {
-    return "00:00:00";
-  }
-
-  const totalSeconds = Math.round(minutes * 60);
-  const hours = Math.floor(totalSeconds / 3600);
-  const remainingSeconds = totalSeconds % 3600;
-  const mins = Math.floor(remainingSeconds / 60);
-  const seconds = remainingSeconds % 60;
-
-  const pad = (unit: number) => String(unit).padStart(2, "0");
-
-  return `${pad(hours)}:${pad(mins)}:${pad(seconds)}`;
-};
+import FileUpload from "@/components/shared/FileUpload";
 
 interface TopicFormDialogProps {
   open: boolean;
@@ -87,51 +46,43 @@ export const TopicFormDialog: React.FC<TopicFormDialogProps> = ({
   onSuccess,
 }) => {
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+  const [imageUrls, setImageUrls] = React.useState<string[]>([]);
+  const [videoUrls, setVideoUrls] = React.useState<string[]>([]);
+  const [pdfUrls, setPdfUrls] = React.useState<string[]>([]);
+  const [expandedUpload, setExpandedUpload] = React.useState<
+    "image" | "video" | "file" | null
+  >(null);
   const isEditMode = Boolean(topic?.guid);
+
+  const toggleUpload = (type: "image" | "video" | "file") => {
+    setExpandedUpload((prev) => (prev === type ? null : type));
+  };
   const moduleName = module?.name || module?.title;
-  const initialValues = React.useMemo(
-    () =>
-      topic
-        ? {
-            ...topic,
-            duration: convertDurationToMinutes(topic.duration),
-          }
-        : { ...ModuleTopicInitialValues },
-    [topic],
-  );
 
   const formik = useFormik({
-    initialValues,
+    initialValues: topic || ModuleTopicInitialValues,
     validationSchema: ModuleTopicSchema,
     enableReinitialize: true,
     validateOnBlur: true,
     onSubmit: async (values, helpers) => {
       try {
         setErrorMessage(null);
-        const payload = {
-          ...values,
-          duration: convertMinutesToDurationString(values.duration),
-        };
 
         if (isEditMode && topic) {
           await apiClient.patch(
             `/main/v1/topics/${topic.guid}/update/`,
-            payload,
+            values,
           );
           Notify.success("Topic updated successfully");
         } else if (module?.guid) {
           await apiClient.post("/main/v1/topics/create/", {
-            ...payload,
+            ...values,
             module: module.guid,
-            files: [
-              "https://file-examples.com/storage/fe333e46dc691f3309c6c82/2017/10/file-sample_150kB.pdf",
-            ],
+            files: pdfUrls,
             files_description: "File description",
-            videos: ["https://www.pexels.com/download/video/5538137/"],
+            videos: videoUrls,
             videos_description: "Sample video",
-            images: [
-              "https://images.unsplash.com/photo-1464226184884-fa280b87c399?auto=format&fit=crop&w=1000&q=80",
-            ],
+            images: imageUrls,
           });
           Notify.success("Topic added successfully");
         }
@@ -154,7 +105,7 @@ export const TopicFormDialog: React.FC<TopicFormDialogProps> = ({
       : "Add topic";
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>{dialogTitle}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2} sx={{ mt: 1 }}>
@@ -210,6 +161,90 @@ export const TopicFormDialog: React.FC<TopicFormDialogProps> = ({
             error={Boolean(formik.touched.order && formik.errors.order)}
             helperText={formik.touched.order && (formik.errors.order as string)}
           />
+
+          {/* Resource Upload Section */}
+          <Box>
+            <Typography
+              variant="subtitle2"
+              color="text.secondary"
+              sx={{ mb: 1.5 }}
+            >
+              Add Resources
+            </Typography>
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              <Badge badgeContent={imageUrls.length} color="primary">
+                <Chip
+                  icon={expandedUpload === "image" ? <Close /> : <ImageIcon />}
+                  label="Images"
+                  variant={expandedUpload === "image" ? "filled" : "outlined"}
+                  color={expandedUpload === "image" ? "primary" : "default"}
+                  onClick={() => toggleUpload("image")}
+                  sx={{ cursor: "pointer" }}
+                />
+              </Badge>
+              <Badge badgeContent={videoUrls.length} color="primary">
+                <Chip
+                  icon={expandedUpload === "video" ? <Close /> : <VideoFile />}
+                  label="Videos"
+                  variant={expandedUpload === "video" ? "filled" : "outlined"}
+                  color={expandedUpload === "video" ? "primary" : "default"}
+                  onClick={() => toggleUpload("video")}
+                  sx={{ cursor: "pointer" }}
+                />
+              </Badge>
+              <Badge badgeContent={pdfUrls.length} color="primary">
+                <Chip
+                  icon={
+                    expandedUpload === "file" ? <Close /> : <PictureAsPdf />
+                  }
+                  label="Documents"
+                  variant={expandedUpload === "file" ? "filled" : "outlined"}
+                  color={expandedUpload === "file" ? "primary" : "default"}
+                  onClick={() => toggleUpload("file")}
+                  sx={{ cursor: "pointer" }}
+                />
+              </Badge>
+            </Stack>
+
+            <Collapse in={expandedUpload === "image"} timeout="auto">
+              <Box sx={{ mt: 2 }}>
+                <FileUpload
+                  fileType="image"
+                  label="Upload Topic Images"
+                  description="JPEG, PNG, WEBP (max 100MB each)"
+                  values={imageUrls}
+                  multiple
+                  onChange={setImageUrls}
+                />
+              </Box>
+            </Collapse>
+
+            <Collapse in={expandedUpload === "video"} timeout="auto">
+              <Box sx={{ mt: 2 }}>
+                <FileUpload
+                  fileType="video"
+                  label="Upload Topic Videos"
+                  description="MP4, WebM, OGG (max 100MB each)"
+                  values={videoUrls}
+                  multiple
+                  onChange={setVideoUrls}
+                />
+              </Box>
+            </Collapse>
+
+            <Collapse in={expandedUpload === "file"} timeout="auto">
+              <Box sx={{ mt: 2 }}>
+                <FileUpload
+                  fileType="file"
+                  label="Upload Topic Documents"
+                  description="PDF files (max 100MB each)"
+                  values={pdfUrls}
+                  multiple
+                  onChange={setPdfUrls}
+                />
+              </Box>
+            </Collapse>
+          </Box>
         </Stack>
       </DialogContent>
       <DialogActions>

@@ -28,7 +28,9 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
 }) => {
   const theme = useTheme();
   const { user } = useAuth();
-  const PLACEHOLDER_IMAGE = `/images/${course.guid}.jpg`;
+  const PLACEHOLDER_IMAGE = course?.image
+    ? course?.image
+    : "/images/course_placeholder.jpg";
   const progress = Math.min(Math.max(course.course_progress || 0, 0), 100);
   const courseImage =
     // course.image
