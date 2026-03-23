@@ -32,12 +32,15 @@ import {
   CURRENCIES,
   CourseInitialValues,
 } from "@/schemas/instructor/course.schema";
+import { LEARNING_MODES } from "@/constants/courses";
 import { categories } from "@/lib/categories";
 import { apiClient } from "@/api/apiClient";
 import { useUser } from "@/hooks/useAuth";
 import { Report } from "notiflix/build/notiflix-report-aio";
 import { ChipInputField } from "@/components/shared/ChipInputFeld";
 import FileUpload from "@/components/shared/FileUpload";
+import { AuthUser } from "@/types/auth.types";
+import { useQuery } from "@tanstack/react-query";
 
 interface CourseModalProps {
   open: boolean;
@@ -60,6 +63,24 @@ export const CourseModal: React.FC<CourseModalProps> = ({
   );
   const user = useUser();
 
+  const {
+    data: users = [],
+    isLoading,
+    isError,
+  } = useQuery<AuthUser[]>({
+    queryKey: ["adminUsers"],
+    queryFn: () => apiClient.get<AuthUser[]>("/main/v1/user/all/"),
+  });
+
+  // Filter only instructors
+  const instructorOptions = Array.isArray(users)
+    ? users.filter((u) =>
+        u.role && typeof u.role === "object"
+          ? u.role.name === "INSTRUCTOR"
+          : u.role.name === "INSTRUCTOR",
+      )
+    : [];
+
   useEffect(() => {
     setBannerUrls(course?.image ? [course.image] : []);
   }, [course]);
@@ -68,6 +89,9 @@ export const CourseModal: React.FC<CourseModalProps> = ({
     initialValues: course || {
       ...CourseInitialValues,
       instructor: user?.guid || "",
+      learning_mode: "ONLINE",
+      venue: "",
+      training_date: "",
     },
     validationSchema: CourseSchema,
     enableReinitialize: true,
@@ -81,8 +105,17 @@ export const CourseModal: React.FC<CourseModalProps> = ({
           : "/main/v1/courses/create/";
 
         const { image, ...rest } = values;
+        let training_date = rest.training_date;
+        // If physical and training_date is set, format as ISO string (YYYY-MM-DDTHH:mm)
+        if (rest.learning_mode === "PHYSICAL" && training_date) {
+          // If already contains 'T', assume it's correct, else add T00:00
+          if (!training_date.includes("T")) {
+            training_date = `${training_date}T00:00`;
+          }
+        }
         const payload = {
           ...rest,
+          training_date,
           // Convert amount to null if not paid
           amount: values.isPaid ? values.amount : null,
           currency: values.isPaid ? values.currency : null,
@@ -258,6 +291,105 @@ export const CourseModal: React.FC<CourseModalProps> = ({
                     )}
                   </FormControl>
                 </Grid>
+
+                {/* Learning Mode */}
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>Learning Mode</InputLabel>
+                    <Select
+                      name="learning_mode"
+                      value={formik.values.learning_mode || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      label="Learning Mode"
+                    >
+                      {LEARNING_MODES.map((mode) => (
+                        <MenuItem key={mode.value} value={mode.value}>
+                          {mode.label}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                {/* Instructor */}
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>Instructor</InputLabel>
+                    <Select
+                      name="instructor"
+                      value={formik.values.instructor || ""}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      label="Instructor"
+                      required
+                      error={Boolean(
+                        formik.touched.instructor && formik.errors.instructor,
+                      )}
+                    >
+                      {instructorOptions.map((inst) => (
+                        <MenuItem key={inst.guid} value={inst.guid}>
+                          {inst.first_name} {inst.last_name} ({inst.email})
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    {formik.touched.instructor && formik.errors.instructor && (
+                      <Typography variant="caption" color="error">
+                        {formik.errors.instructor as string}
+                      </Typography>
+                    )}
+                  </FormControl>
+                </Grid>
+
+                {/* Venue and Date for Physical */}
+                {formik.values.learning_mode === "PHYSICAL" && (
+                  <>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        label="Venue"
+                        name="venue"
+                        fullWidth
+                        value={formik.values.venue}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={Boolean(
+                          formik.touched.venue && formik.errors.venue,
+                        )}
+                        helperText={
+                          formik.touched.venue &&
+                          (formik.errors.venue as string)
+                        }
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        label="Training Date"
+                        name="training_date"
+                        type="date"
+                        fullWidth
+                        slotProps={{
+                          input: {
+                            inputProps: {
+                              min: new Date().toISOString().split("T")[0],
+                            },
+                          },
+                        }}
+                        InputLabelProps={{ shrink: true }}
+                        value={formik.values.training_date}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={Boolean(
+                          formik.touched.training_date &&
+                          formik.errors.training_date,
+                        )}
+                        helperText={
+                          formik.touched.training_date &&
+                          (formik.errors.training_date as string)
+                        }
+                      />
+                    </Grid>
+                  </>
+                )}
               </Grid>
             </Box>
 

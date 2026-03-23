@@ -69,46 +69,7 @@ export const AdminDashboard: React.FC = () => {
           ))}
         </Grid>
       </Box>
-      {/* 
-      <Paper
-        elevation={0}
-        sx={{
-          p: 4,
-          borderRadius: 3,
-          border: (theme) => `1px dashed ${theme.palette.divider}`,
-          backgroundColor: (theme) => theme.palette.background.paper,
-        }}
-      >
-        <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-          Quick Actions
-        </Typography>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6} md={3}>
-            <Button
-              variant="outlined"
-              fullWidth
-              onClick={() => navigate(PATHS.ADMIN_COURSE_LIST)}
-            >
-              Review Courses
-            </Button>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Button variant="outlined" fullWidth>
-              Invite Instructor
-            </Button>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Button variant="outlined" fullWidth>
-              View Reports
-            </Button>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Button variant="outlined" fullWidth>
-              System Settings
-            </Button>
-          </Grid>
-        </Grid>
-      </Paper> */}
+      
     </Stack>
   );
 };

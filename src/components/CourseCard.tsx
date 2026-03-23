@@ -1,17 +1,12 @@
 import React from "react";
-import {
-  Box,
-  Button,
-  Card,
-  CardActions,
-  CardContent,
-  Chip,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Box, Card, CardContent, Chip, Stack, Typography } from "@mui/material";
 import { alpha } from "@mui/material/styles";
+import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import { TCourse } from "@/types/course.types";
 import { truncateString } from "@/utils/truncateString";
+import { toSentenceCase } from "@/utils/toSentenceCase";
+import { format } from "date-fns";
 
 export interface CourseCardProps {
   course: TCourse;
@@ -26,7 +21,15 @@ const CourseCard: React.FC<CourseCardProps> = ({
   ctaLabel = "Enroll Now",
   href,
 }) => {
-  const { title, description, image, isPaid, amount, expertise_level } = course;
+  const {
+    title,
+    description,
+    image,
+    isPaid,
+    amount,
+    expertise_level,
+    learning_mode,
+  } = course;
 
   const handleAction = () => {
     if (onAction) {
@@ -90,6 +93,21 @@ const CourseCard: React.FC<CourseCardProps> = ({
           }
           alt={title}
         />
+        {/* Learning Mode Chip */}
+        <Chip
+          label={learning_mode ? toSentenceCase(learning_mode) : "Online"}
+          size="small"
+          color={learning_mode === "PHYSICAL" ? "warning" : "info"}
+          variant="outlined"
+          sx={{
+            position: "absolute",
+            top: 12,
+            right: 12,
+            fontWeight: 700,
+            zIndex: 2,
+            textTransform: "capitalize",
+          }}
+        />
       </Box>
       <CardContent sx={{ flexGrow: 1 }}>
         <Stack spacing={1.5}>
@@ -101,6 +119,35 @@ const CourseCard: React.FC<CourseCardProps> = ({
           >
             {truncateString(title, 75)}
           </Typography>
+          {/* Venue and Date for Physical Courses */}
+          {learning_mode === "PHYSICAL" && (
+            <Stack
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              mt={0.5}
+              mb={1}
+            >
+              {course.venue && (
+                <Chip
+                  icon={<PersonOutlineIcon fontSize="small" />}
+                  label={course.venue}
+                  size="small"
+                  color="default"
+                  sx={{ fontWeight: 500 }}
+                />
+              )}
+              {course.training_date && (
+                <Chip
+                  icon={<CalendarTodayOutlinedIcon fontSize="small" />}
+                  label={format(new Date(course.training_date), "PPP")}
+                  size="small"
+                  color="default"
+                  sx={{ fontWeight: 500 }}
+                />
+              )}
+            </Stack>
+          )}
           <Typography variant="subtitle2"> {course.category}</Typography>
           <Typography variant="body2" color="text.secondary">
             {truncateString(description, 200)}
@@ -110,7 +157,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
           {expertise_level && (
             <Chip
               label={expertise_level}
-              color="secondary"
+              color="default"
               size="small"
               sx={{ mt: 2, width: "fit-content", color: "primary.main" }}
             />

@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/landing-page/Footer";
 import Notiflix from "notiflix";
 import { isDashboardPage } from "@/utils/isDashboardPage";
+import "../src/styles/index.css";
 
 // Helper function to render routes recursively
 const renderRoutes = (routes: any[]) => {

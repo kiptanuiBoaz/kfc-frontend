@@ -23,15 +23,9 @@ import {
   Tooltip,
   Typography,
   IconButton,
+  Avatar,
 } from "@mui/material";
-import {
-  Plus,
-  Eye,
-  Pencil,
-  MoreVertical,
-  Trash2,
-  Clipboard,
-} from "lucide-react";
+import { Plus, Pencil, MoreVertical, Trash2, Clipboard } from "lucide-react";
 import { CourseModal } from "../../components/CourseModal";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { TCoursePrviewDetails } from "@/types/course.types";
@@ -44,6 +38,9 @@ import ErrorPage from "@/pages/errors/ErrorPage";
 import dayjs from "dayjs";
 import { truncateString } from "@/utils/truncateString";
 import { Notify } from "notiflix";
+import { toSentenceCase } from "@/utils/toSentenceCase";
+import { MEDIA_BASE_URL } from "@/api/axios";
+import { renderStatusChip } from "@/utils/statusChip";
 
 const InstructorCourses = () => {
   const user = useUser();
@@ -152,29 +149,7 @@ const InstructorCourses = () => {
     setIsDeleteDialogOpen(false);
     setCoursePendingDelete(null);
   };
-  const renderStatusChip = (status: string) => {
-    const colorMap: Record<
-      string,
-      "default" | "success" | "warning" | "info" | "error"
-    > = {
-      draft: "default",
-      pending: "warning",
-      published: "success",
-      archived: "info",
-      rejected: "error",
-    };
 
-    const key = status?.toLowerCase() || "default";
-
-    return (
-      <Chip
-        size="small"
-        label={status}
-        color={colorMap[key] || "default"}
-        sx={{ textTransform: "capitalize" }}
-      />
-    );
-  };
   if (coursesLoading) {
     return <LoadingPage message="Loading courses" />;
   }
@@ -182,6 +157,7 @@ const InstructorCourses = () => {
   if (isError) {
     return <ErrorPage message="Failed to load courses. Please try again." />;
   }
+
   return (
     <CustomContainer>
       <Stack spacing={2}>
@@ -216,9 +192,15 @@ const InstructorCourses = () => {
                 <TableHead>
                   <TableRow>
                     <TableCell>#</TableCell>
+                    <TableCell>
+                      {" "}
+                      <TableCell>Image</TableCell>
+                    </TableCell>
                     <TableCell>Course</TableCell>
+                    <TableCell>Learning Mode</TableCell>
                     <TableCell>Status</TableCell>
                     <TableCell>Price</TableCell>
+                    <TableCell>Instructor</TableCell>
                     <TableCell>Total Duration</TableCell>
                     <TableCell>Created</TableCell>
                     <TableCell align="right">Actions</TableCell>
@@ -227,24 +209,58 @@ const InstructorCourses = () => {
                 <TableBody>
                   {courses.map((course, index) => (
                     <TableRow key={course.guid} hover>
-                      <TableCell>{index + 1}</TableCell>
+                      <TableCell>{index + 1}</TableCell>{" "}
+                      <TableCell>
+                        <Box
+                          component="img"
+                          src={
+                            course.image || "/images/logos/horizontal_logo.png"
+                          }
+                          alt={course.title}
+                          sx={{
+                            width: 56,
+                            height: 40,
+                            objectFit: "cover",
+                            borderRadius: 1,
+                            boxShadow: 1,
+                            bgcolor: "grey.100",
+                          }}
+                        />{" "}
+                      </TableCell>
                       <TableCell>
                         <Stack direction="row" spacing={2} alignItems="center">
                           <Box>
                             <Typography variant="subtitle2" fontWeight={600}>
-                              {truncateString(course.title, 60)}
+                              {truncateString(course.title, 40)}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                              {truncateString(course.description ?? "", 60)}
+                              {truncateString(course.description ?? "", 40)}
                             </Typography>
                           </Box>
                         </Stack>
                       </TableCell>
-                      <TableCell>{renderStatusChip(course.status)}</TableCell>
+                      <TableCell>
+                        {toSentenceCase(course.learning_mode)}
+                      </TableCell>
+                      <TableCell>
+                        {renderStatusChip(toSentenceCase(course.status))}
+                      </TableCell>
                       <TableCell>
                         {course.isPaid && course.amount
                           ? `${course.currency ?? "USD"} ${course.amount}`
                           : "Free"}
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          sx={{ py: 2, px: 1 }}
+                          avatar={
+                            <Avatar
+                              sizes="large"
+                              src={`${MEDIA_BASE_URL}${course?.instructor_details?.image}`}
+                            />
+                          }
+                          label={`${course.instructor_details.first_name} ${course.instructor_details.last_name}`}
+                        />
                       </TableCell>
                       <TableCell>{course.total_duration}</TableCell>
                       <TableCell>

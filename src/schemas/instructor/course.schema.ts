@@ -61,6 +61,23 @@ export const CourseSchema = Yup.object().shape({
     instructor: Yup.string()
         .nullable()
         .required('Instructor is required'),
+    learning_mode: Yup.string()
+        .oneOf(['ONLINE', 'PHYSICAL'], 'Invalid learning mode')
+        .required('Learning mode is required'),
+    venue: Yup.string()
+        .nullable()
+        .when('learning_mode', {
+            is: 'PHYSICAL',
+            then: (schema) => schema.required('Venue is required for physical courses'),
+            otherwise: (schema) => schema.nullable(),
+        }),
+    training_date: Yup.string()
+        .nullable()
+        .when('learning_mode', {
+            is: 'PHYSICAL',
+            then: (schema) => schema.required('Training date is required for physical courses'),
+            otherwise: (schema) => schema.nullable(),
+        }),
     // image: Yup.string()
     //     .url('Image must be a valid URL')
     //     .nullable(),
@@ -79,6 +96,9 @@ export const courseInitialValues = {
     isFeatured: false,
     status: 'draft',
     instructor: "",
+    learning_mode: 'ONLINE',
+    venue: '',
+    training_date: '',
     // image: '',
 };
 
@@ -120,5 +140,8 @@ export const CourseInitialValues = {
     isFeatured: false,
     status: "draft",
     instructor: 1,
+    learning_mode: 'ONLINE',
+    venue: '',
+    training_date: '',
     image: "",
 }

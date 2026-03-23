@@ -5,6 +5,7 @@ import { Hero } from "@/components/landing-page/Hero";
 import Categories from "@/components/landing-page/Categories";
 import FeaturedCourses from "@/components/landing-page/FeaturedCourses";
 import Footer from "@/components/landing-page/Footer";
+import TrainingCalendar from "@/components/landing-page/TrainingCalendar";
 
 export default function LandingPage() {
   return (
@@ -12,7 +13,7 @@ export default function LandingPage() {
       <Hero />
       <Categories />
       <FeaturedCourses />
-      {/* <Footer /> */}
+      <TrainingCalendar />
     </Box>
   );
 }

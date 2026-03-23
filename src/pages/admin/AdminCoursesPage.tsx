@@ -28,6 +28,8 @@ import { useNavigate } from "react-router-dom";
 import LoadingPage from "@/components/shared/LoadingPage";
 import ErrorPage from "@/pages/errors/ErrorPage";
 import { truncateString } from "@/utils/truncateString";
+import { toSentenceCase } from "@/utils/toSentenceCase";
+import { renderStatusChip } from "@/utils/statusChip";
 //local host
 export const AdminCoursesPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -186,7 +188,9 @@ export const AdminCoursesPage: React.FC = () => {
               <TableHead>
                 <TableRow>
                   <TableCell>#</TableCell>
+                  <TableCell>Image</TableCell>
                   <TableCell>Course</TableCell>
+                  <TableCell>Learning Mode</TableCell>
                   <TableCell align="left">Instructor</TableCell>
                   <TableCell>Status</TableCell>
                   <TableCell>Price</TableCell>
@@ -198,6 +202,23 @@ export const AdminCoursesPage: React.FC = () => {
                 {courses.map((course, index) => (
                   <TableRow key={course.guid} hover>
                     <TableCell>{index + 1}</TableCell>
+                    <TableCell>
+                      <Box
+                        component="img"
+                        src={
+                          course.image || "/images/logos/horizontal_logo.png"
+                        }
+                        alt={course.title}
+                        sx={{
+                          width: 56,
+                          height: 40,
+                          objectFit: "cover",
+                          borderRadius: 1,
+                          boxShadow: 1,
+                          bgcolor: "grey.100",
+                        }}
+                      />
+                    </TableCell>
                     <TableCell>
                       <Stack direction="row" spacing={2} alignItems="center">
                         <Box>
@@ -212,6 +233,19 @@ export const AdminCoursesPage: React.FC = () => {
                       </Stack>
                     </TableCell>
                     <TableCell>
+                      <Chip
+                        size="small"
+                        label={
+                          course.learning_mode
+                            ? course.learning_mode.charAt(0).toUpperCase() +
+                              course.learning_mode.slice(1)
+                            : "Online"
+                        }
+                        sx={{ textTransform: "capitalize" }}
+                        color="primary"
+                      />
+                    </TableCell>
+                    <TableCell>
                       <Typography fontWeight={500}>
                         {course.instructor_details
                           ? `${course.instructor_details.first_name ?? ""} ${
@@ -220,7 +254,9 @@ export const AdminCoursesPage: React.FC = () => {
                           : "N/A"}
                       </Typography>
                     </TableCell>
-                    <TableCell>{renderStatus(course.status)}</TableCell>
+                    <TableCell>
+                      {renderStatusChip(toSentenceCase(course.status))}
+                    </TableCell>
                     <TableCell>
                       {course.isPaid && course.amount
                         ? `${course.currency ?? "USD"} ${course.amount}`

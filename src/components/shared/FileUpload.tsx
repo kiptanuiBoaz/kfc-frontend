@@ -117,6 +117,15 @@ const FileUpload: React.FC<FileUploadProps> = ({
     const validFiles = files.filter((file) => validateFile(file));
     if (validFiles.length === 0) return;
 
+    // Calculate total size of all files to be uploaded (including already uploaded)
+    const totalSize = validFiles.reduce((acc, file) => acc + file.size, 0);
+    // If already uploaded files exist, try to estimate their size as 0 (since we don't have the original size)
+    // So only new files are counted for the limit
+    if (totalSize > 100 * 1024 * 1024) {
+      Notiflix.Notify.failure("Total upload size cannot exceed 100MB.");
+      return;
+    }
+
     setIsUploading(true);
 
     try {

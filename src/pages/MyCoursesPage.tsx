@@ -20,7 +20,7 @@ const defaultOptionValue = "all";
 
 type FilterState = {
   search: string;
-  tag: string;
+  learningMode: string;
   level: string;
   instructor: string;
 };
@@ -30,19 +30,22 @@ const MyCoursesPage = () => {
 
   const [filters, setFilters] = React.useState<FilterState>({
     search: "",
-    tag: defaultOptionValue,
+    learningMode: defaultOptionValue,
     level: defaultOptionValue,
     instructor: defaultOptionValue,
   });
 
-  const tags = React.useMemo(
+  const learningModes = React.useMemo(
     () => [
-      { value: defaultOptionValue, label: "All Tags" },
-      ...Array.from(new Set(courses.flatMap((course) => course.tags || [])))
+      { value: defaultOptionValue, label: "All Modes" },
+      ...Array.from(new Set(courses.map((course) => course.learning_mode)))
         .filter(Boolean)
-        .map((tag) => ({ value: tag, label: tag })),
+        .map((mode) => ({
+          value: mode,
+          label: mode.charAt(0).toUpperCase() + mode.slice(1),
+        })),
     ],
-    [courses]
+    [courses],
   );
 
   const levels = React.useMemo(
@@ -52,7 +55,7 @@ const MyCoursesPage = () => {
         .filter(Boolean)
         .map((level) => ({ value: level, label: level })),
     ],
-    [courses]
+    [courses],
   );
 
   const instructors = React.useMemo(
@@ -62,7 +65,7 @@ const MyCoursesPage = () => {
         .filter((name) => name.length > 0)
         .map((name) => ({ value: name, label: name })),
     ],
-    [courses]
+    [courses],
   );
 
   const filteredCourses = React.useMemo(() => {
@@ -71,14 +74,18 @@ const MyCoursesPage = () => {
     return courses.filter((course) => {
       const instructorName = course.instructor?.name;
 
+      // Search includes title, description, and tags
       const matchesSearch =
         searchTerm.length === 0 ||
         course.title.toLowerCase().includes(searchTerm) ||
-        course.description?.toLowerCase().includes(searchTerm);
+        course.description?.toLowerCase().includes(searchTerm) ||
+        (course.tags || []).some((tag) =>
+          tag.toLowerCase().includes(searchTerm),
+        );
 
-      const matchesTag =
-        filters.tag === defaultOptionValue ||
-        (course.tags || []).includes(filters.tag);
+      const matchesLearningMode =
+        filters.learningMode === defaultOptionValue ||
+        course.learning_mode === filters.learningMode;
 
       const matchesLevel =
         filters.level === defaultOptionValue ||
@@ -88,7 +95,12 @@ const MyCoursesPage = () => {
         filters.instructor === defaultOptionValue ||
         instructorName === filters.instructor;
 
-      return matchesSearch && matchesTag && matchesLevel && matchesInstructor;
+      return (
+        matchesSearch &&
+        matchesLearningMode &&
+        matchesLevel &&
+        matchesInstructor
+      );
     });
   }, [courses, filters]);
 
@@ -99,7 +111,7 @@ const MyCoursesPage = () => {
   const handleClearFilters = () => {
     setFilters({
       search: "",
-      tag: defaultOptionValue,
+      learningMode: defaultOptionValue,
       level: defaultOptionValue,
       instructor: defaultOptionValue,
     });
@@ -164,18 +176,18 @@ const MyCoursesPage = () => {
               <TextField
                 fullWidth
                 select
-                value={filters.tag}
+                value={filters.learningMode}
                 onChange={(event) =>
-                  handleFilterChange("tag", event.target.value)
+                  handleFilterChange("learningMode", event.target.value)
                 }
                 SelectProps={{
                   displayEmpty: true,
                   renderValue: (value) =>
-                    tags.find((option) => option.value === value)?.label ??
-                    "All Tags",
+                    learningModes.find((option) => option.value === value)
+                      ?.label ?? "All Modes",
                 }}
               >
-                {tags.map((option) => (
+                {learningModes.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
                     {option.label}
                   </MenuItem>

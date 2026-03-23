@@ -121,12 +121,12 @@ const FeaturedCourses = () => {
 
   return (
     <CustomContainer>
-      <Box>
+      <Box sx={{ py: 5 }}>
         <Typography
           gutterBottom
           textAlign={"center"}
           variant="h3"
-          sx={{ mt: 3 }}
+          sx={{ py: 3 }}
         >
           Our Featured Courses
         </Typography>

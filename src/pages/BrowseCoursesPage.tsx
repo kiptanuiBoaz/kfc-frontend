@@ -12,12 +12,7 @@ import {
   Typography,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/landing-page/Footer";
 import ExtendedCourseCard from "@/components/ExtendedCourseCard";
-import ServerPagination from "@/components/pagination/ServerPagination";
-import { COURSES, Course } from "@/constants/courses";
-import { useServerPagination } from "@/hooks/useServerPagination";
 import { TCourse, TEnrolledCourse } from "@/types/course.types";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/api/apiClient";
@@ -31,7 +26,7 @@ const defaultOptionValue = "all";
 
 type FilterState = {
   search: string;
-  tag: string;
+  learningMode: string;
   level: string;
   instructor: string;
 };
@@ -41,7 +36,7 @@ const BrowseCoursesPage: React.FC = () => {
   const isAuthenticated = useIsAuthenticated();
   const [filters, setFilters] = React.useState<FilterState>({
     search: "",
-    tag: defaultOptionValue,
+    learningMode: defaultOptionValue,
     level: defaultOptionValue,
     instructor: defaultOptionValue,
   });
@@ -63,48 +58,55 @@ const BrowseCoursesPage: React.FC = () => {
       }),
   });
 
-  const tags = React.useMemo(
+  const learningModes = React.useMemo(
     () => [
-      { value: defaultOptionValue, label: "All Tags" },
-      ...Array.from(
-        new Set(courses.flatMap((course) => course.tags || []))
-      ).map((tag) => ({ value: tag, label: tag })),
+      { value: defaultOptionValue, label: "All Modes" },
+      ...Array.from(new Set(courses.map((course) => course.learning_mode)))
+        .filter(Boolean)
+        .map((mode) => ({
+          value: mode,
+          label: mode.charAt(0).toUpperCase() + mode.slice(1),
+        })),
     ],
-    [courses]
+    [courses],
   );
 
   const levels = React.useMemo(
     () => [
       { value: defaultOptionValue, label: "All Levels" },
       ...Array.from(
-        new Set(courses.map((course) => course.expertise_level))
+        new Set(courses.map((course) => course.expertise_level)),
       ).map((level) => ({ value: level, label: level })),
     ],
-    [courses]
+    [courses],
   );
 
   const instructors = React.useMemo(
     () => [
       { value: defaultOptionValue, label: "All Instructors" },
       ...Array.from(
-        new Set(courses.map((course) => `${course.instructor_name}`))
+        new Set(courses.map((course) => `${course.instructor_name}`)),
       ).map((instructor) => ({ value: instructor, label: instructor })),
     ],
-    [courses]
+    [courses],
   );
 
   const filteredCourses = React.useMemo(() => {
     const searchTerm = filters.search.trim().toLowerCase();
 
     return courses.filter((course) => {
+      // Search includes title, description, and tags
       const matchesSearch =
         searchTerm.length === 0 ||
         course.title.toLowerCase().includes(searchTerm) ||
-        course.description.toLowerCase().includes(searchTerm);
+        course.description.toLowerCase().includes(searchTerm) ||
+        (course.tags || []).some((tag) =>
+          tag.toLowerCase().includes(searchTerm),
+        );
 
-      const matchesTag =
-        filters.tag === defaultOptionValue ||
-        course.tags?.includes(filters.tag);
+      const matchesLearningMode =
+        filters.learningMode === defaultOptionValue ||
+        course.learning_mode === filters.learningMode;
 
       const matchesLevel =
         filters.level === defaultOptionValue ||
@@ -114,7 +116,12 @@ const BrowseCoursesPage: React.FC = () => {
         filters.instructor === defaultOptionValue ||
         `${course.instructor_name}` === filters.instructor;
 
-      return matchesSearch && matchesTag && matchesLevel && matchesInstructor;
+      return (
+        matchesSearch &&
+        matchesLearningMode &&
+        matchesLevel &&
+        matchesInstructor
+      );
     });
   }, [filters, courses]);
 
@@ -128,7 +135,7 @@ const BrowseCoursesPage: React.FC = () => {
   const handleClearFilters = () => {
     setFilters({
       search: "",
-      tag: defaultOptionValue,
+      learningMode: defaultOptionValue,
       level: defaultOptionValue,
       instructor: defaultOptionValue,
     });
@@ -183,21 +190,21 @@ const BrowseCoursesPage: React.FC = () => {
             <TextField
               fullWidth
               select
-              value={filters.tag}
+              value={filters.learningMode}
               onChange={(event) =>
-                handleFilterChange("tag", event.target.value)
+                handleFilterChange("learningMode", event.target.value)
               }
               slotProps={{
                 select: {
                   displayEmpty: true,
                   renderValue: (value) =>
-                    tags.find((option) => option.value === value)?.label ??
-                    "All",
+                    learningModes.find((option) => option.value === value)
+                      ?.label ?? "All Modes",
                 },
               }}
               sx={{ fontSize: { xs: "0.95rem", sm: "1rem" } }}
             >
-              {tags.map((option) => (
+              {learningModes.map((option) => (
                 <MenuItem key={option.value} value={option.value}>
                   {option.label}
                 </MenuItem>

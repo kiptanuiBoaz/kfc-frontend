@@ -1,3 +1,4 @@
+
 import { categories } from './../lib/categories';
 import { TQuiz } from "@/types/quiz.types";
 
@@ -18,6 +19,9 @@ export type TCourse = {
     instructor: number | null,
     total_duration?: string,
     course_progress?: number,
+    learning_mode?: string,
+    venue?: string | null,
+    training_date?: string | null,
     instructor_name?: string,
     instructor_image?: string,
     modules?: TCourseModule[],
@@ -29,6 +33,9 @@ export type TCourse = {
     deleted_by: string | null,
     id: number,
     guid: string,
+    instructor_details: TInstructorDetails,
+
+
 
 };
 
@@ -123,6 +130,9 @@ export interface TCoursePrviewDetails {
     currency: string | null,
     isFeatured: boolean,
     status: string,
+    learning_mode: string,
+    venue: string | null,
+    training_date: string | null,
     instructor_details: {
         guid: string,
         email: string,
@@ -133,7 +143,7 @@ export interface TCoursePrviewDetails {
     },
     total_duration: string,
     course_progress: number,
-    modules: TCourseModule[],
+    total_modules: number,
     created_at: string,
     created_by: string,
     updated_at: string,
@@ -180,6 +190,10 @@ export interface TEnrolledCourse {
     isPaid: boolean,
     amount: string | null,
     currency: string | null,
+    learning_mode: string | null,
+    venue: string | null,
+    training_date: string | null;
+
 }
 
 

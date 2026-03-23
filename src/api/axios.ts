@@ -8,6 +8,8 @@ import { jwtDecode } from 'jwt-decode';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+export const MEDIA_BASE_URL = import.meta.env.VITE_MEDIA_BASE_URL;
+
 // Create a separate axios instance for refresh requests to avoid infinite loops
 const refreshAxios = axios.create({
     baseURL: BASE_URL,

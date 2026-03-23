@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Button,
@@ -16,6 +16,10 @@ import { alpha, useTheme } from "@mui/material/styles";
 import { TEnrolledCourse } from "@/types/course.types";
 import { useNavigate } from "react-router-dom";
 import { truncateString } from "@/utils/truncateString";
+import { DownloadIcon } from "lucide-react";
+import { apiClient } from "@/api/apiClient";
+import { toSentenceCase } from "@/utils/toSentenceCase";
+import { formatDate } from "date-fns";
 
 interface ExtendedCourseCardProps {
   course: TEnrolledCourse;
@@ -34,6 +38,33 @@ const ExtendedCourseCard: React.FC<ExtendedCourseCardProps> = ({
 
   const handleEnroll = () => {
     navigate(`/courses/${course.guid}/enroll`);
+  };
+
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownloadCertificate = async () => {
+    setDownloading(true);
+    try {
+      const response = await apiClient.post(
+        `/main/v1/courses/${course.guid}/certificate/`,
+        {},
+        { responseType: "blob" },
+      );
+
+      // @ts-ignore
+      const url = window.URL.createObjectURL(response);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `certificate-${course.title}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert("Failed to download certificate.");
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (
@@ -86,6 +117,26 @@ const ExtendedCourseCard: React.FC<ExtendedCourseCardProps> = ({
           }
           alt={course.title}
         />
+        {/* Learning Mode Chip */}
+        <Chip
+          label={
+            course.learning_mode
+              ? toSentenceCase(course.learning_mode)
+              : "Online"
+          }
+          size="small"
+          color={course?.learning_mode === "PHYSICAL" ? "warning" : "info"}
+          variant="outlined"
+          sx={{
+            position: "absolute",
+            top: 12,
+            right: 12,
+
+            fontWeight: 700,
+            zIndex: 2,
+            textTransform: "capitalize",
+          }}
+        />
       </Box>
 
       <CardContent sx={{ flexGrow: 1 }}>
@@ -112,6 +163,35 @@ const ExtendedCourseCard: React.FC<ExtendedCourseCardProps> = ({
             <Typography variant="h6" sx={{ fontWeight: 700 }}>
               {truncateString(course.title, 75)}
             </Typography>
+            {/* Venue and Date for Physical Courses */}
+            {course.learning_mode === "PHYSICAL" && (
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                mt={0.5}
+                mb={1}
+              >
+                {course.venue && (
+                  <Chip
+                    icon={<PersonOutlineIcon fontSize="small" />}
+                    label={course.venue}
+                    size="small"
+                    color="default"
+                    sx={{ fontWeight: 500 }}
+                  />
+                )}
+                {course.training_date && (
+                  <Chip
+                    icon={<CalendarTodayOutlinedIcon fontSize="small" />}
+                    label={formatDate(new Date(course.training_date), "PPP")}
+                    size="small"
+                    color="default"
+                    sx={{ fontWeight: 500 }}
+                  />
+                )}
+              </Stack>
+            )}
             <Typography variant="subtitle2" color="text.secondary">
               {course.category}
             </Typography>
@@ -165,18 +245,39 @@ const ExtendedCourseCard: React.FC<ExtendedCourseCardProps> = ({
 
       <CardActions sx={{ px: 3, pb: 3, pt: 0, gap: 1.5 }}>
         {isEnrolled ? (
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => navigate(`/courses/${course.guid}/learn`)}
-            fullWidth
-          >
-            {course.course_progress && course.course_progress > 0
-              ? course.course_progress < 100
+          course.course_progress === 100 ? (
+            <>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => navigate(`/courses/${course.guid}/learn`)}
+                fullWidth
+              >
+                Review Course
+              </Button>
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={handleDownloadCertificate}
+                disabled={downloading}
+                fullWidth
+                endIcon={<DownloadIcon size={16} />}
+              >
+                {downloading ? "Downloading..." : "Get Certificate"}
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => navigate(`/courses/${course.guid}/learn`)}
+              fullWidth
+            >
+              {course.course_progress && course.course_progress > 0
                 ? "Continue Learning"
-                : "Review Course"
-              : "Start Learning"}
-          </Button>
+                : "Start Learning"}
+            </Button>
+          )
         ) : (
           <>
             <Button
