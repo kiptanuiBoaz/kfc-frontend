@@ -20,6 +20,7 @@ import { DownloadIcon } from "lucide-react";
 import { apiClient } from "@/api/apiClient";
 import { toSentenceCase } from "@/utils/toSentenceCase";
 import { formatDate } from "date-fns";
+import { LocationOnOutlined } from "@mui/icons-material";
 
 interface ExtendedCourseCardProps {
   course: TEnrolledCourse;
@@ -174,7 +175,7 @@ const ExtendedCourseCard: React.FC<ExtendedCourseCardProps> = ({
               >
                 {course.venue && (
                   <Chip
-                    icon={<PersonOutlineIcon fontSize="small" />}
+                    icon={<LocationOnOutlined fontSize="small" />}
                     label={course.venue}
                     size="small"
                     color="default"
@@ -183,7 +184,12 @@ const ExtendedCourseCard: React.FC<ExtendedCourseCardProps> = ({
                 )}
                 {course.training_date && (
                   <Chip
-                    icon={<CalendarTodayOutlinedIcon fontSize="small" />}
+                    icon={
+                      <CalendarTodayOutlinedIcon
+                        sx={{ fontSize: 10 }}
+                        fontSize="small"
+                      />
+                    }
                     label={formatDate(new Date(course.training_date), "PPP")}
                     size="small"
                     color="default"

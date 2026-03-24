@@ -4,21 +4,15 @@ import interactionPlugin from "@fullcalendar/interaction";
 import listPlugin from "@fullcalendar/list";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import timelinePlugin from "@fullcalendar/timeline";
-import {
-  Box,
-  Container,
-  Paper,
-  Typography,
-  Chip,
-  Link as MuiLink,
-} from "@mui/material";
-import { useTheme } from "@mui/material/styles";
-import { Link as RouterLink } from "react-router-dom";
+import { Box, Paper, Typography } from "@mui/material";
 import { useRef, useState } from "react";
 import { TCourse } from "@/types/course.types";
 import { apiClient } from "@/api/apiClient";
 import { useQuery } from "@tanstack/react-query";
 import { CustomContainer } from "@/components/shared/CustomContainer";
+import Event from "@/components/calendar/Event";
+import { GlobalStyles } from "@/components/calendar/GlobalStyles";
+import LoadingPage from "@/components/shared/LoadingPage";
 
 const TrainingCalendar = () => {
   const {
@@ -26,8 +20,9 @@ const TrainingCalendar = () => {
     isLoading,
     isError,
   } = useQuery<TCourse[]>({
-    queryKey: ["adminCourses"],
+    queryKey: ["public-courses"],
     queryFn: () => apiClient.get<TCourse[]>("/main/v1/public/courses/"),
+    enabled: true,
   });
 
   // Filter only physical courses with a valid training_date
@@ -49,116 +44,65 @@ const TrainingCalendar = () => {
 
   const calendarRef = useRef(null);
   const [view, setView] = useState("dayGridMonth");
-  const theme = useTheme();
+  if (isLoading) return <LoadingPage />;
 
   return (
-    <Paper elevation={1} sx={{ py: [2, 4, 6], p: 3, borderRadius: 3 }}>
-      <CustomContainer>
-        <Typography
-          color="primary"
-          gutterBottom
-          textAlign={"center"}
-          variant="h3"
-        >
-          Trainings Calendar
-        </Typography>
-        <Typography textAlign={"center"} variant="body1" color="text.secondary">
-          Stay updated with our upcoming physical training sessions.
-        </Typography>
-        <Box>
-          <FullCalendar
-            ref={calendarRef}
-            plugins={[
-              dayGridPlugin,
-              timeGridPlugin,
-              listPlugin,
-              timelinePlugin,
-              interactionPlugin,
-            ]}
-            initialView={view}
-            headerToolbar={{
-              left: "prev,next today",
-              center: "title",
-              right: "dayGridMonth,timeGridWeek,listWeek",
-            }}
-            // @ts-ignore
-            events={events}
-            eventContent={(arg) => {
-              // Determine if event is past or upcoming
-              const now = new Date();
-              const eventDate = new Date(arg.event.start as Date);
+    <>
+      <Paper elevation={1} sx={{ py: [2, 4, 6], p: 3, borderRadius: 3 }}>
+        <CustomContainer>
+          <Typography
+            color="primary"
+            gutterBottom
+            textAlign={"center"}
+            variant="h3"
+          >
+            Trainings Calendar
+          </Typography>
+          <Typography
+            textAlign={"center"}
+            variant="body1"
+            color="text.secondary"
+          >
+            Stay updated with our upcoming physical training sessions.
+          </Typography>
+          <Box>
+            <GlobalStyles />
+            <FullCalendar
+              ref={calendarRef}
+              plugins={[
+                dayGridPlugin,
+                timeGridPlugin,
+                listPlugin,
+                timelinePlugin,
+                interactionPlugin,
+              ]}
+              initialView={view}
+              headerToolbar={{
+                left: "prev,next today",
+                center: "title",
+                right: "dayGridMonth,timeGridWeek,listWeek",
+              }}
               // @ts-ignore
-              const isPast = eventDate < now.setHours(0, 0, 0, 0);
-              // Style chips
-
-              // Clamp styles
-              const clampStyle = {
-                display: "-webkit-box",
-                WebkitLineClamp: 1,
-                WebkitBoxOrient: "vertical",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "normal",
-                fontWeight: 700,
-                fontSize: 15,
-                mb: 0.2,
-                maxWidth: 220,
-                border: "none",
-              };
-              const descClampStyle = {
-                display: "-webkit-box",
-                WebkitLineClamp: 1,
-                WebkitBoxOrient: "vertical",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "normal",
-                fontSize: 12,
-                color: "#666",
-                maxWidth: 220,
-                border: "none",
-              };
-              // Link to course preview
-              const courseGuid = arg.event.id;
-              return (
-                <MuiLink
-                  component={RouterLink}
-                  to={`/courses/preview/${courseGuid}`}
-                  underline="none"
-                  sx={{
-                    backgroundColor: "#f9f9f9",
-                    display: "block",
-                    cursor: "pointer",
-                    "&:hover": { opacity: 0.8 },
-                    p: 1,
-                    borderRadius: 1.5,
-                    borderColor: isPast
-                      ? theme.palette.warning.main
-                      : theme.palette.primary.main,
-                    borderWidth: 1,
-                    borderStyle: "solid",
-                  }}
-                >
-                  {/* @ts-ignore */}
-                  <div style={clampStyle}>{arg.event.title}</div>
-                  {arg.event.extendedProps.description && (
-                    // @ts-ignore
-                    <div style={descClampStyle}>
-                      {arg.event.extendedProps.description}
-                    </div>
-                  )}
-                </MuiLink>
-              );
-            }}
-            height={600}
-            noEventsContent={
-              <Typography color="text.secondary">
-                No upcoming physical trainings.
-              </Typography>
-            }
-          />
-        </Box>
-      </CustomContainer>
-    </Paper>
+              events={events}
+              eventContent={(arg) => {
+                // Find the course for this event
+                const course = physicalCourses.find(
+                  (c) => (c.guid || c.id) === arg.event.id,
+                );
+                if (!course) return null;
+                return <Event course={course} arg={arg} />;
+              }}
+              height={600}
+              noEventsContent={
+                <Typography color="text.secondary">
+                  No upcoming physical trainings.
+                </Typography>
+              }
+            />
+          </Box>
+        </CustomContainer>
+      </Paper>
+    </>
   );
 };
 

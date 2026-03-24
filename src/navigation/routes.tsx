@@ -5,6 +5,7 @@ import AuthGuard from "@/guards/AuthGuard";
 import RoleGuard from "@/guards/RoleGuard";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Outlet } from "react-router-dom";
+const OrgRegistrationPage = lazy(() => import("@/pages/OrgRegistrationPage"));
 
 // Lazy imports
 const LandingPage = lazy(() => import("@/pages/LandingPage"));
@@ -13,34 +14,34 @@ const LoginPage = lazy(() => import("@/pages/LoginPage"));
 const SignUpPage = lazy(() => import("@/pages/SignUpPage"));
 const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
 const ResetPasswordConfirmPage = lazy(
-  () => import("@/pages/ResetPasswordConfirmPage")
+  () => import("@/pages/ResetPasswordConfirmPage"),
 );
 const InstructorDashboard = lazy(() => import("@/pages/InstructorDashboard"));
 const InstructorCourses = lazy(
-  () => import("@/pages/instructor/InstructorCourses")
+  () => import("@/pages/instructor/InstructorCourses"),
 );
 const AdminDashboard = lazy(() =>
   import("@/pages/AdminDashboard").then((module) => ({
     default: module.AdminDashboard,
-  }))
+  })),
 );
 const AdminCoursesPage = lazy(() =>
   import("@/pages/admin/AdminCoursesPage").then((module) => ({
     default: module.AdminCoursesPage,
-  }))
+  })),
 );
 const InstructorCourseDetailsPage = lazy(
-  () => import("@/pages/instructor/InstructorCourseDetailsPage")
+  () => import("@/pages/instructor/InstructorCourseDetailsPage"),
 );
 const CoursePreviewPage = lazy(() =>
   import("@/pages/CoursePreviewPage").then((module) => ({
     default: module.CoursePreviewPage,
-  }))
+  })),
 );
 const EnrollCourse = lazy(() =>
   import("@/pages/EnrollCourse").then((module) => ({
     default: module.EnrollCourse,
-  }))
+  })),
 );
 const MyCoursesPage = lazy(() => import("@/pages/MyCoursesPage"));
 const NotFoundPage = lazy(() => import("@/pages/errors/NotFoundPage"));
@@ -48,12 +49,12 @@ const AdminUsersPage = lazy(() => import("@/pages/admin/AdminUsersPage"));
 const AdminRolesPage = lazy(() =>
   import("@/pages/admin/AdminRolesPage").then((module) => ({
     default: module.AdminRolesPage,
-  }))
+  })),
 );
 const QuizManagementPage = lazy(() =>
   import("@/pages/instructor/QuizManagementPage").then((module) => ({
     default: module.QuizManagementPage,
-  }))
+  })),
 );
 const TakeCoursePage = lazy(() => import("@/pages/user/TakeCoursePage"));
 const TakeQuizPage = lazy(() => import("@/pages/user/TakeQuizPage"));
@@ -86,6 +87,10 @@ export const routes = [
   {
     path: PATHS.RESET_PASSWORD,
     element: <LazyPage component={ResetPasswordPage} />,
+  },
+  {
+    path: PATHS.ORG_REGISTRATION,
+    element: <LazyPage component={OrgRegistrationPage} />,
   },
   {
     path: PATHS.RESET_PASSWORD_CONFIRM,

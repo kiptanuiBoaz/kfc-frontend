@@ -18,5 +18,6 @@ export const PATHS = {
     COURSE_ENROLL: '/courses/:courseGuid/enroll',
     INSTRUCTOR_QUIZZES: '/instructor/courses/:courseGuid/quizzes/:quizGuid',
     TAKE_COURSE_PAGE: '/courses/:courseGuid/learn',
-    TAKE_QUIZ_PAGE: '/modules/:moduleGuid/quizzes/:quizGuid'
+    TAKE_QUIZ_PAGE: '/modules/:moduleGuid/quizzes/:quizGuid',
+    ORG_REGISTRATION: '/register',
 };

@@ -48,7 +48,7 @@ const BrowseCoursesPage: React.FC = () => {
     isLoading,
     isError,
   } = useQuery<TCourse[]>({
-    queryKey: ["adminCourses"],
+    queryKey: ["public-courses"],
     queryFn: () => apiClient.get<TCourse[]>("/main/v1/public/courses/"),
     select: (data) =>
       [...data].sort((a, b) => {

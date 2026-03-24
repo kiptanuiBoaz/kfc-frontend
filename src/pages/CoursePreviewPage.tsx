@@ -1,14 +1,9 @@
 import React from "react";
 import {
-  Alert,
   Avatar,
   Box,
   Button,
-  Card,
-  CardContent,
   Chip,
-  CircularProgress,
-  Container,
   Divider,
   Grid,
   Paper,
@@ -17,27 +12,26 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  AccordionActions,
   useTheme,
   alpha,
-  Tooltip,
   IconButton,
   useMediaQuery,
 } from "@mui/material";
-import { CheckCircle2, Clock, Star, Info, Calendar } from "lucide-react";
+import Tooltip from "@mui/material/Tooltip";
+import { Clock, Star, Info, Calendar } from "lucide-react";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 
 import { apiClient } from "@/api/apiClient";
-import { TCoursePrviewDetails } from "@/types/course.types";
+import { TCourse } from "@/types/course.types";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { useIsAuthenticated, useUser } from "@/hooks/useAuth";
 import { useMyCourses } from "@/hooks/useMyCourses";
 import { isCourseEnrolled } from "@/utils/isCourseEnrolled";
-import { Loading } from "notiflix";
 import ErrorPage from "@/pages/errors/ErrorPage";
 import LoadingPage from "@/components/shared/LoadingPage";
+import { ArrowRight, ArrowRightAlt } from "@mui/icons-material";
 const MEDIA_BASE_URL = import.meta.env.VITE_MEDIA_BASE_URL || "";
 export const CoursePreviewPage = () => {
   const { courseGuid } = useParams<{ courseGuid: string }>();
@@ -46,17 +40,16 @@ export const CoursePreviewPage = () => {
   const isAuthenticated = useIsAuthenticated();
   const navigate = useNavigate();
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down("sm"));
+
   const {
     data: course,
     isLoading: isCourseLoading,
     isError: isCourseError,
-  } = useQuery<TCoursePrviewDetails | undefined>({
+  } = useQuery<TCourse | undefined>({
     queryKey: ["courseDetails", courseGuid],
     enabled: !!courseGuid,
     queryFn: async () =>
-      await apiClient.get<TCoursePrviewDetails>(
-        `/main/v1/courses/${courseGuid}/`,
-      ),
+      await apiClient.get<TCourse>(`/main/v1/courses/${courseGuid}/`),
   });
 
   const { data: myCourses = [] } = useMyCourses();
@@ -80,8 +73,9 @@ export const CoursePreviewPage = () => {
     }
 
     if (isEnrolled) {
+      const isPhysical = course?.learning_mode === "PHYSICAL";
       return {
-        label: "Continue Learning",
+        label: isPhysical ? "View Content" : "Continue Learning",
         onClick: () => navigate(`/courses/${course?.guid}/learn`),
       };
     }
@@ -90,7 +84,14 @@ export const CoursePreviewPage = () => {
       label: "Enroll Now",
       onClick: () => navigate(`/courses/${course?.guid}/enroll`),
     };
-  }, [course?.guid, isAuthenticated, isEnrolled, isInstructor, navigate]);
+  }, [
+    course?.guid,
+    isAuthenticated,
+    isEnrolled,
+    isInstructor,
+    navigate,
+    course?.learning_mode,
+  ]);
 
   if (isCourseLoading) {
     return <LoadingPage message="Loading course details..." />;
@@ -123,6 +124,7 @@ export const CoursePreviewPage = () => {
           >
             <Box
               sx={{
+                position: "relative",
                 width: { xs: "100%", md: 340 },
                 minWidth: 0,
                 mb: { xs: 2, md: 0 },
@@ -133,7 +135,11 @@ export const CoursePreviewPage = () => {
             >
               <Box
                 component="img"
-                src={`/images/${course.guid}.jpg`}
+                src={
+                  course?.image
+                    ? `${MEDIA_BASE_URL}${course.image}`
+                    : "/images/logos/horizontal_logo.png"
+                }
                 alt={course.title}
                 sx={{
                   width: { xs: "100%", sm: 320, md: 340 },
@@ -144,6 +150,28 @@ export const CoursePreviewPage = () => {
                   boxShadow: { xs: 1, md: 2 },
                 }}
               />
+              {/* Learning Mode Chip */}
+              {course.learning_mode && (
+                <Chip
+                  label={
+                    course.learning_mode.charAt(0) +
+                    course.learning_mode.slice(1).toLowerCase()
+                  }
+                  size="small"
+                  color={
+                    course.learning_mode === "PHYSICAL" ? "warning" : "info"
+                  }
+                  variant="outlined"
+                  sx={{
+                    position: "absolute",
+                    top: 12,
+                    right: 12,
+                    fontWeight: 700,
+                    zIndex: 2,
+                    textTransform: "capitalize",
+                  }}
+                />
+              )}
             </Box>
             <Box
               sx={{
@@ -155,17 +183,53 @@ export const CoursePreviewPage = () => {
               }}
             >
               <Stack spacing={2} sx={{ width: "100%" }}>
-                <Typography
-                  variant="h4"
-                  fontWeight={700}
+                <Box
                   sx={{
-                    fontSize: { xs: "1.3rem", sm: "1.7rem", md: "2.2rem" },
-                    textAlign: { xs: "center", md: "left" },
-                    wordBreak: "break-word",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: { xs: "center", md: "flex-start" },
                   }}
                 >
-                  {course.title}
-                </Typography>
+                  <Typography
+                    variant="h4"
+                    fontWeight={700}
+                    sx={{
+                      fontSize: { xs: "1.3rem", sm: "1.7rem", md: "2.2rem" },
+                      textAlign: { xs: "center", md: "left" },
+                      wordBreak: "break-word",
+                    }}
+                  >
+                    {course.title}
+                  </Typography>
+                  <Tooltip
+                    title={
+                      <Box>
+                        <Typography
+                          variant="body2"
+                          fontWeight={600}
+                          sx={{ mb: 0.5 }}
+                        >
+                          Expertise Guide
+                        </Typography>
+                        <Typography variant="body2">
+                          Beginner: Entry-level awareness
+                        </Typography>
+                        <Typography variant="body2">
+                          Intermediate: Operational compliance
+                        </Typography>
+                        <Typography variant="body2">
+                          Advanced: Audit & certification readiness
+                        </Typography>
+                      </Box>
+                    }
+                    placement="top"
+                    arrow
+                  >
+                    <IconButton size="small" sx={{ ml: 1 }}>
+                      <Info size={18} />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
                 <Typography
                   variant="subtitle1"
                   gutterBottom
@@ -173,11 +237,26 @@ export const CoursePreviewPage = () => {
                 >
                   {course.category}
                 </Typography>
-                <Stack spacing={2} direction={"row"}>
+
+                <Stack spacing={2} direction={"row"} alignItems="center">
                   <Calendar style={{ fontSize: "10px" }} />
                   <Typography variant="body2" color="text.secondary">
                     Created: {new Date(course.created_at).toLocaleDateString()}
                   </Typography>
+                  {course.learning_mode === "PHYSICAL" && course.venue && (
+                    <>
+                      <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
+                      <Typography variant="body2" color="text.secondary">
+                        <strong>Location:</strong> {course.venue}
+                      </Typography>
+                      {course.training_date && (
+                        <Typography variant="body2" color="text.secondary">
+                          <strong>Date:</strong>{" "}
+                          {new Date(course.training_date).toLocaleDateString()}
+                        </Typography>
+                      )}
+                    </>
+                  )}
                 </Stack>
 
                 <Stack
@@ -205,35 +284,6 @@ export const CoursePreviewPage = () => {
                       icon={<Star size={18} color="gold" />}
                       label={course.expertise_level}
                     />
-                    <Tooltip
-                      color="info"
-                      title={
-                        <Box>
-                          <Typography
-                            variant="body2"
-                            fontWeight={600}
-                            sx={{ mb: 0.5 }}
-                          >
-                            Expertise Guide
-                          </Typography>
-                          <Typography variant="body2">
-                            Beginner: Entry-level awareness
-                          </Typography>
-                          <Typography variant="body2">
-                            Intermediate: Operational compliance
-                          </Typography>
-                          <Typography variant="body2">
-                            Advanced: Audit & certification readiness
-                          </Typography>
-                        </Box>
-                      }
-                      placement="top"
-                      arrow
-                    >
-                      <IconButton size="small">
-                        <Info size={18} />
-                      </IconButton>
-                    </Tooltip>
 
                     <Chip
                       size={isMobile ? "small" : "medium"}
@@ -304,6 +354,7 @@ export const CoursePreviewPage = () => {
                       variant="contained"
                       size="large"
                       fullWidth={true}
+                      endIcon={<ArrowRight />}
                     >
                       {primaryAction.label}
                     </Button>

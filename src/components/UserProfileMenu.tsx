@@ -28,6 +28,8 @@ import LibraryBooksIcon from "@mui/icons-material/LibraryBooks";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useNavigate } from "react-router-dom";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+
 import { useDispatch } from "react-redux";
 import { PATHS } from "@/navigation/paths";
 import { useUser } from "@/hooks/useAuth";
@@ -46,6 +48,7 @@ import {
   ProfileSchema,
 } from "@/schemas/auth/profile.schema";
 import { updateUser } from "@/redux/slices/authSlice";
+import { UserCalendar } from "@/components/UserCalendar";
 const MEDIA_BASE_URL = import.meta.env.VITE_MEDIA_BASE_URL || "";
 interface UserProfileMenuProps {
   anchorEl: HTMLElement | null;
@@ -66,6 +69,9 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
   const dispatch = useDispatch<AppDispatch>();
   const user = useUser();
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = React.useState(false);
+  // For calendar dialog (user's physical trainings)
+
   const [formError, setFormError] = React.useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = React.useState(false);
   const [imageError, setImageError] = React.useState<string | null>(null);
@@ -212,6 +218,16 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
 
   return (
     <>
+      {/* Calendar Icon Button for USER role */}
+      {isUser && (
+        <IconButton
+          aria-label="My Trainings Calendar"
+          onClick={() => setIsCalendarOpen(true)}
+          sx={{ ml: 1 }}
+        >
+          <CalendarMonthIcon color="primary" />
+        </IconButton>
+      )}
       <Chip
         avatar={
           <Avatar
@@ -238,6 +254,8 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
           },
         }}
       />
+      {/* Dialog for user's physical trainings calendar */}
+
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
@@ -491,6 +509,11 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
           </DialogActions>
         </form>
       </Dialog>
+
+      <UserCalendar
+        isCalendarOpen={isCalendarOpen}
+        setIsCalendarOpen={setIsCalendarOpen}
+      />
     </>
   );
 };

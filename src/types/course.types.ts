@@ -152,6 +152,45 @@ export interface TCoursePrviewDetails {
     deleted_by: null | string
 }
 
+export interface TCourseDetails {
+    id: number,
+    guid: string,
+    title: string,
+    description: string,
+    image: string,
+    tags: string[],
+    expertise_level: string,
+    prerequisites: string[],
+    category: string,
+    objectives: string[],
+    isPaid: boolean,
+    amount: string | null,
+    currency: string | null,
+    isFeatured: boolean,
+    status: string,
+    learning_mode: string,
+    venue: string | null,
+    training_date: string | null,
+    instructor_details: {
+        guid: string,
+        email: string,
+        first_name: string,
+        last_name: string,
+        bio: string | null,
+        image: string
+    },
+    total_duration: string,
+    course_progress: number,
+    modules: TModuleTopic[],
+    created_at: string,
+    created_by: string,
+    updated_at: string,
+    updated_by: string,
+    deleted_at: null | string,
+    deleted_by: null | string
+}
+
+
 export interface TCourseDiscussion {
     guid: string,
     course_details: {

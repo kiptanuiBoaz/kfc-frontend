@@ -1,0 +1,25 @@
+export const clampStyle = {
+    display: "-webkit-box",
+    WebkitLineClamp: 1,
+    WebkitBoxOrient: "vertical",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "normal",
+    fontWeight: 700,
+    fontSize: 15,
+    mb: 0.2,
+    maxWidth: 220,
+    border: "none",
+};
+export const descClampStyle = {
+    display: "-webkit-box",
+    WebkitLineClamp: 1,
+    WebkitBoxOrient: "vertical",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "normal",
+    fontSize: 12,
+    color: "#666",
+    maxWidth: 220,
+    border: "none",
+};

@@ -63,7 +63,8 @@ export const buildPalette = () => {
       disabledBackground: GREY[500_24],
       focus: GREY[500_24],
       hoverOpacity: 0.08,
-      disabledOpacity: 0.48
+      disabledOpacity: 0.48,
+      disabledContrast: "#000"
     }
   }
   return {
