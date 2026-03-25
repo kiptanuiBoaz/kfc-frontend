@@ -1,12 +1,28 @@
 import React from "react";
-import { Box, Card, CardContent, Chip, Stack, Typography } from "@mui/material";
+import {
+  Box,
+  Card,
+  CardContent,
+  Chip,
+  Stack,
+  Typography,
+  IconButton,
+  Rating,
+  CardActions,
+  Button,
+} from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
+import BookmarkIcon from "@mui/icons-material/Bookmark";
 import { TCourse } from "@/types/course.types";
 import { truncateString } from "@/utils/truncateString";
 import { toSentenceCase } from "@/utils/toSentenceCase";
 import { format } from "date-fns";
+import { ArrowForward } from "@mui/icons-material";
 
 export interface CourseCardProps {
   course: TCourse;
@@ -29,6 +45,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
     amount,
     expertise_level,
     learning_mode,
+    course_iteractions,
   } = course;
 
   const handleAction = () => {
@@ -39,7 +56,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
 
   return (
     <Card
-      onClick={href ? undefined : handleAction}
+      // onClick={href ? undefined : handleAction}
       elevation={2}
       sx={{
         height: "100%",
@@ -86,6 +103,95 @@ const CourseCard: React.FC<CourseCardProps> = ({
           },
         }}
       >
+        {/* Always-visible Like and Save icons with counts */}
+        <Box
+          sx={{
+            position: "absolute",
+            top: 12,
+            left: 12,
+            zIndex: 3,
+            display: "flex",
+            gap: 1,
+            background: "rgba(255,255,255,0.85)",
+            borderRadius: 2,
+            p: 0.5,
+            boxShadow: 1,
+            alignItems: "center",
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0 }}>
+            <IconButton
+              color={course_iteractions?.user_liked ? "error" : "default"}
+              size="small"
+              sx={{ backgroundColor: "transparent" }}
+              disabled
+            >
+              {course_iteractions?.user_liked ? (
+                <FavoriteIcon fontSize="small" />
+              ) : (
+                <FavoriteBorderIcon fontSize="small" />
+              )}
+            </IconButton>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ textAlign: "center" }}
+            >
+              {course_iteractions?.likes ?? 0}
+            </Typography>
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <IconButton
+              color={course_iteractions?.user_saved ? "primary" : "default"}
+              size="small"
+              sx={{ backgroundColor: "transparent" }}
+              disabled
+            >
+              {course_iteractions?.user_saved ? (
+                <BookmarkIcon color="info" fontSize="small" />
+              ) : (
+                <BookmarkBorderIcon fontSize="small" />
+              )}
+            </IconButton>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ textAlign: "center" }}
+            >
+              {course_iteractions?.saves ?? 0}
+            </Typography>
+          </Box>
+        </Box>
+        {/* Rating badge at bottom left of image */}
+        <Box
+          sx={{
+            position: "absolute",
+            left: 12,
+            bottom: 12,
+            zIndex: 2,
+            background: "rgba(255,255,255,0.92)",
+            borderRadius: 2,
+            px: 1.2,
+            py: 0.5,
+            display: "flex",
+            alignItems: "center",
+            boxShadow: 1,
+          }}
+        >
+          <Rating
+            value={course_iteractions?.average_rating || 0}
+            precision={0.1}
+            readOnly
+            size="small"
+            sx={{ mr: 0.5 }}
+          />
+          <Typography variant="caption" color="text.secondary">
+            {course_iteractions?.average_rating
+              ? course_iteractions.average_rating.toFixed(1)
+              : "-"}{" "}
+            / 5
+          </Typography>
+        </Box>
         <Box
           component="img"
           src={
@@ -179,8 +285,9 @@ const CourseCard: React.FC<CourseCardProps> = ({
           )}
         </Stack>
       </CardContent>
-      {/* <CardActions sx={{ px: 2, pb: 2 }}>
+      <CardActions sx={{ px: 2, pb: 2 }}>
         <Button
+          endIcon={<ArrowForward />}
           fullWidth
           variant="contained"
           color="primary"
@@ -190,7 +297,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
         >
           {ctaLabel}
         </Button>
-      </CardActions> */}
+      </CardActions>
     </Card>
   );
 };

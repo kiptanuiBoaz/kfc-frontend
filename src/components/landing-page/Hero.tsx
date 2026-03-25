@@ -19,6 +19,7 @@ import { CustomContainer } from "@/components/shared/CustomContainer";
 export const Hero = () => {
   return (
     <Box
+      id="home"
       sx={{
         position: "relative",
         height: "100vh",
@@ -115,23 +116,22 @@ export const Hero = () => {
                 Explore Flower Courses
               </Button>
               <Button
-                variant="outlined"
+                variant="contained"
                 size="large"
-                component={RouterLink}
-                to={PATHS.SIGN_UP}
+                color="secondary"
                 sx={{
                   px: 4,
                   py: 1.5,
                   fontSize: "1.1rem",
-                  borderColor: "white",
-                  color: "white",
-                  "&:hover": {
-                    borderColor: "white",
-                    backgroundColor: "rgba(255, 255, 255, 0.1)",
-                  },
+                }}
+                onClick={() => {
+                  const el = document.querySelector("#calendar");
+                  if (el) {
+                    el.scrollIntoView({ behavior: "smooth" });
+                  }
                 }}
               >
-                Get Started Free
+                View Calendar
               </Button>
             </Stack>
 

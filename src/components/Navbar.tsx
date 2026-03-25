@@ -31,53 +31,6 @@ import { Notify } from "notiflix";
 import { UserProfileMenu } from "./UserProfileMenu";
 import { CustomContainer } from "@/components/shared/CustomContainer";
 
-const publicNavItems = [
-  { label: "Home", variant: "text" as const, to: PATHS.HOME },
-  { label: "Course Catalog", variant: "text" as const, to: PATHS.COURSES },
-];
-
-const authNavItems = [
-  // ...publicNavItems,
-  { label: "Login", variant: "text" as const, to: PATHS.LOGIN },
-  { label: "Sign Up", variant: "contained" as const, to: PATHS.SIGN_UP },
-];
-
-const baseNavItems = [
-  ...publicNavItems,
-  {
-    label: "My Learning",
-    variant: "text" as const,
-    to: PATHS.MY_COURSES,
-  },
-];
-
-const instructorNavItems = [
-  ...publicNavItems,
-
-  // {
-  //   label: "Dashboard",
-  //   variant: "text" as const,
-  //   to: PATHS.INSTRUCTOR_DASHBOARD,
-  // },
-  {
-    label: "My Courses",
-    variant: "text" as const,
-    to: PATHS.INSTRUCTOR_COURSE_LIST,
-  },
-];
-
-const adminNavItems = [
-  ...publicNavItems,
-
-  {
-    label: "Admin Dashboard",
-    variant: "text" as const,
-    to: PATHS.ADMIN_DASHBOARD,
-  },
-];
-
-const studentNavItems = baseNavItems;
-
 const Navbar: React.FC = () => {
   const theme = useTheme();
   const navigate = useNavigate();
@@ -95,6 +48,57 @@ const Navbar: React.FC = () => {
   const isAdmin = user?.role?.name?.toLowerCase() === "admin";
   const isInstructor = user?.role?.name?.toLowerCase() === "instructor";
   const isUser = user?.role?.name?.toLowerCase() === "user";
+  const publicNavItems = [
+    { label: "Home", variant: "text" as const, to: PATHS.HOME },
+    { label: "Course Catalog", variant: "text" as const, to: PATHS.COURSES },
+    location.pathname === PATHS.HOME
+      ? {
+          label: "Trainings Calendar",
+          variant: "text" as const,
+          to: "#calendar",
+          scrollTo: true,
+        }
+      : undefined,
+  ];
+  const authNavItems = [
+    // ...publicNavItems,
+    { label: "Login", variant: "text" as const, to: PATHS.LOGIN },
+    { label: "Sign Up", variant: "contained" as const, to: PATHS.SIGN_UP },
+  ];
+
+  const baseNavItems = [
+    ...publicNavItems,
+    {
+      label: "My Learning",
+      variant: "text" as const,
+      to: PATHS.MY_COURSES,
+    },
+  ];
+
+  const instructorNavItems = [
+    ...publicNavItems,
+
+    // {
+    //   label: "Dashboard",
+    //   variant: "text" as const,
+    //   to: PATHS.INSTRUCTOR_DASHBOARD,
+    // },
+    {
+      label: "My Courses",
+      variant: "text" as const,
+      to: PATHS.INSTRUCTOR_COURSE_LIST,
+    },
+  ];
+
+  const adminNavItems = [
+    ...publicNavItems,
+
+    {
+      label: "Admin Dashboard",
+      variant: "text" as const,
+      to: PATHS.ADMIN_DASHBOARD,
+    },
+  ];
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -116,7 +120,7 @@ const Navbar: React.FC = () => {
   const handleProfileMenuClose = () => {
     setAnchorEl(null);
   };
-
+  const studentNavItems = baseNavItems;
   const getMainNavItems = () => {
     if (!isAuthenticated) return publicNavItems;
     if (isAdmin) return adminNavItems;
@@ -131,6 +135,14 @@ const Navbar: React.FC = () => {
     if (isUser) return studentNavItems;
   };
 
+  const handleSmoothScroll = (e: React.MouseEvent, to: string) => {
+    e.preventDefault();
+    const el = document.querySelector(to);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   const renderDesktopNav = () => (
     <Box
       sx={{
@@ -143,19 +155,31 @@ const Navbar: React.FC = () => {
       {/* Navigation Links - Centered */}
       <Box sx={{ flex: 1, display: "flex", justifyContent: "center" }}>
         <Stack direction="row" spacing={3} sx={{ alignItems: "center" }}>
-          {getMainNavItems().map((item) => {
-            const linkProps = item.to
+          {getMainNavItems().map((item, index) => {
+            // If scrollTo is set, use smooth scroll handler
+            if (item?.scrollTo && item?.to) {
+              return (
+                <Button
+                  key={item?.label + index}
+                  color="inherit"
+                  variant="text"
+                  onClick={(e) => handleSmoothScroll(e, item.to!)}
+                >
+                  {item.label}
+                </Button>
+              );
+            }
+            const linkProps = item?.to
               ? { component: RouterLink, to: item.to }
               : {};
-
             return (
               <Button
-                key={item.label}
+                key={item?.label + index}
                 color="inherit"
                 variant="text"
                 {...linkProps}
               >
-                {item.label}
+                {item?.label}
               </Button>
             );
           })}

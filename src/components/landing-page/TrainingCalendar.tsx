@@ -48,7 +48,7 @@ export const TrainingCalendar = () => {
   if (isLoading) return <LoadingPage />;
 
   return (
-    <>
+    <Box id="calendar">
       <GlobalStyles />
       <Paper elevation={1}>
         <CustomContainer
@@ -72,6 +72,7 @@ export const TrainingCalendar = () => {
             textAlign={"center"}
             variant="body1"
             color="text.secondary"
+            gutterBottom
           >
             Stay updated with our upcoming physical training sessions.
           </Typography>
@@ -111,6 +112,6 @@ export const TrainingCalendar = () => {
           </Box>
         </CustomContainer>
       </Paper>
-    </>
+    </Box>
   );
 };

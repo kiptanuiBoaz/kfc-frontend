@@ -32,56 +32,71 @@ import { apiClient } from "@/api/apiClient";
 import { toSentenceCase } from "@/utils/toSentenceCase";
 import { formatDate } from "date-fns";
 import { LocationOnOutlined } from "@mui/icons-material";
-import { Notify } from "notiflix";
+import { Confirm, Notify } from "notiflix";
+import { useAuth, useIsAuthenticated } from "@/hooks/useAuth";
 
 interface ExtendedCourseCardProps {
   course: TEnrolledCourse;
   isEnrolled?: boolean;
+  refetch?: () => void; // Function to refetch course data after interactions
 }
 
 const ExtendedCourseCard: React.FC<ExtendedCourseCardProps> = ({
   course,
   isEnrolled = false,
+  refetch,
 }) => {
+  const isAuthenticated = useIsAuthenticated();
   const theme = useTheme();
   const navigate = useNavigate();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const [downloading, setDownloading] = useState(false);
-  const [popoverAnchor, setPopoverAnchor] = useState<null | HTMLElement>(null);
-  const [interactionLoading, setInteractionLoading] = useState(false);
-  const [liked, setLiked] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [rating, setRating] = useState<number | null>(null);
-  const [reviewText, setReviewText] = useState("");
-  const [showReview, setShowReview] = useState(false);
-  const [hovered, setHovered] = useState(false);
 
-  const handlePopoverClose = () => {
-    setPopoverAnchor(null);
-    setShowReview(false);
-    setRating(null);
-    setReviewText("");
-  };
+  const [downloading, setDownloading] = useState(false);
+
+  const [interactionLoading, setInteractionLoading] = useState(false);
+  const course_interactions = course.course_iteractions;
+  const [liked, setLiked] = useState(course_interactions?.user_liked || false);
+  const [saved, setSaved] = useState(course_interactions?.user_saved || false);
 
   const handleInteraction = async (interaction_type: "like" | "save") => {
+    if (!isAuthenticated) {
+      Confirm.show(
+        "Login Required",
+        `You need to be logged in to ${interaction_type === "like" ? "like" : "save"} this course.`,
+        "Proceed to Login",
+        "Cancel",
+        () => navigate("/login"),
+        () => {},
+        {
+          width: "350px",
+          borderRadius: "8px",
+          okButtonBackground: theme.palette.primary.main,
+          titleColor: theme.palette.text.primary,
+          messageColor: theme.palette.text.secondary,
+          okButtonColor: theme.palette.primary.contrastText,
+        },
+      );
+      return;
+    }
     setInteractionLoading(true);
     try {
       const payload: any = {
         course_guid: course.guid,
         interaction_type,
       };
-      await apiClient.post("/main/v1/courses/interactions/", payload);
+      await apiClient.post("/main/v1/interactions/create/", payload);
       if (interaction_type === "like") setLiked(true);
       if (interaction_type === "save") setSaved(true);
       Notify.success(
         `Course ${interaction_type === "like" ? "liked" : "saved"}!`,
       );
-      handlePopoverClose();
+      refetch?.(); // Refetch course data to update progress, reviews, etc.
     } catch (err) {
       console.error(err);
       Notify.failure(
         `Failed to ${interaction_type === "like" ? "like" : "save"} course. Try again later.`,
       );
+      if (interaction_type === "like") setLiked(false);
+      if (interaction_type === "save") setSaved(false);
     } finally {
       setInteractionLoading(false);
     }
@@ -142,8 +157,6 @@ const ExtendedCourseCard: React.FC<ExtendedCourseCardProps> = ({
           boxShadow: 6,
         },
       }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
     >
       <Box
         sx={{
@@ -172,8 +185,8 @@ const ExtendedCourseCard: React.FC<ExtendedCourseCardProps> = ({
           },
         }}
       >
-        {/* Like and Save icons at top left, only on hover */}
-        {hovered && (
+        {/* Like and Save icons at top left, only on hover, with counts */}
+        {
           <Box
             sx={{
               position: "absolute",
@@ -186,35 +199,62 @@ const ExtendedCourseCard: React.FC<ExtendedCourseCardProps> = ({
               borderRadius: 2,
               p: 0.5,
               boxShadow: 1,
+              alignItems: "center",
             }}
           >
-            <IconButton
-              color={liked ? "error" : "default"}
-              onClick={() => handleInteraction("like")}
-              disabled={interactionLoading || liked}
-              size="small"
-              sx={{
-                backgroundColor: "transparent",
-                "&:hover": { backgroundColor: "error.light" },
-              }}
-            >
-              {liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-            </IconButton>
-            <IconButton
-              color={saved ? "primary" : "default"}
-              onClick={() => handleInteraction("save")}
-              disabled={interactionLoading || saved}
-              size="small"
-              sx={{
-                backgroundColor: "transparent",
-                "&:hover": { backgroundColor: "info.light" },
-              }}
-            >
-              {saved ? <BookmarkIcon /> : <BookmarkBorderIcon />}
-            </IconButton>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0 }}>
+              <IconButton
+                color={liked ? "error" : "default"}
+                onClick={() => handleInteraction("like")}
+                disabled={interactionLoading}
+                size="small"
+                sx={{
+                  backgroundColor: "transparent",
+                  "&:hover": { backgroundColor: "error.light" },
+                }}
+              >
+                {liked ? (
+                  <FavoriteIcon fontSize="small" />
+                ) : (
+                  <FavoriteBorderIcon fontSize="small" />
+                )}
+              </IconButton>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ textAlign: "center" }}
+              >
+                {course_interactions?.likes ?? 0}
+              </Typography>
+            </Box>
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <IconButton
+                color={saved ? "primary" : "default"}
+                onClick={() => handleInteraction("save")}
+                disabled={interactionLoading}
+                size="small"
+                sx={{
+                  backgroundColor: "transparent",
+                  "&:hover": { backgroundColor: "info.light" },
+                }}
+              >
+                {saved ? (
+                  <BookmarkIcon color="info" fontSize="small" />
+                ) : (
+                  <BookmarkBorderIcon fontSize="small" />
+                )}
+              </IconButton>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ textAlign: "center" }}
+              >
+                {course_interactions?.saves ?? 0}
+              </Typography>
+            </Box>
           </Box>
-        )}
-        {/* Optionally, keep review/rating in a popover if needed */}
+        }
+        {/* Course image */}
         <Box
           component="img"
           src={
@@ -222,6 +262,30 @@ const ExtendedCourseCard: React.FC<ExtendedCourseCardProps> = ({
           }
           alt={course.title}
         />
+        {/* Rating badge at bottom left of image */}
+        <Box
+          sx={{
+            position: "absolute",
+            left: 12,
+            bottom: 12,
+            zIndex: 2,
+            background: "rgba(255,255,255,0.72)",
+            borderRadius: 2,
+            px: 1.2,
+            py: 0.5,
+            display: "flex",
+            alignItems: "center",
+            boxShadow: 1,
+          }}
+        >
+          <Rating
+            value={course_interactions?.average_rating || 0}
+            precision={0.1}
+            readOnly
+            size="small"
+            sx={{ mr: 0.5 }}
+          />
+        </Box>
         {/* Learning Mode Chip */}
         <Chip
           label={
@@ -309,6 +373,8 @@ const ExtendedCourseCard: React.FC<ExtendedCourseCardProps> = ({
               {truncateString(course.description, 150)}
             </Typography>
           </Stack>
+
+          {/* (Removed: Rating, Likes, Saves row. Now shown on image/hover) */}
 
           <Stack direction="row" spacing={3} flexWrap="wrap" rowGap={1.5}>
             <Stack direction="row" spacing={1} alignItems="center">

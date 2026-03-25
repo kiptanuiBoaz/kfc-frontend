@@ -34,10 +34,59 @@ export type TCourse = {
     id: number,
     guid: string,
     instructor_details: TInstructorDetails,
+    course_iteractions?: {
+        likes: number;
+        saves: number;
+        average_rating: number;
+        ratings_count: number;
+        reviews_count: number;
+        user_liked: boolean;
+        user_saved: boolean;
+        user_rating: number | null;
+        reviews: {
+            guid: string;
+            rating: number | null;
+            review_text: string;
+            created_at: string;
+            user: {
+                guid: string;
+                first_name: string;
+                last_name: string;
+                image: string;
+            };
+        }[];
+    }
+}
 
 
 
-};
+export interface TCourseInterractions {
+    summary: {
+        likes: number;
+        saves: number;
+        average_rating: number;
+        ratings_count: number;
+        reviews_count: number;
+        user_liked: boolean;
+        user_saved: boolean;
+        user_rating: number | null;
+    };
+    reviews: {
+        guid: string;
+        rating: number | null;
+        review_text: string;
+        created_at: string;
+        user: {
+            guid: string;
+            first_name: string;
+            last_name: string;
+            image: string;
+        };
+    }[];
+
+}
+
+
 
 
 
@@ -196,6 +245,28 @@ export interface TEnrolledCourse {
     learning_mode: string | null,
     venue: string | null,
     training_date: string | null;
+    course_iteractions?: {
+        likes: number;
+        saves: number;
+        average_rating: number;
+        ratings_count: number;
+        reviews_count: number;
+        user_liked: boolean;
+        user_saved: boolean;
+        user_rating: number | null;
+        reviews: {
+            guid: string;
+            rating: number | null;
+            review_text: string;
+            created_at: string;
+            user: {
+                guid: string;
+                first_name: string;
+                last_name: string;
+                image: string;
+            };
+        }[];
+    }
 
 }
 

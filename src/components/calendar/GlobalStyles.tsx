@@ -7,6 +7,32 @@ export const GlobalStyles = () => {
   return (
     <Global
       styles={{
+        // Responsive styles for FullCalendar toolbar
+        "@media (max-width: 600px)": {
+          ".fc .fc-toolbar-title": {
+            fontSize: "1.1rem",
+            textAlign: "center",
+            margin: "8px 0",
+            minWidth: 0,
+            wordBreak: "break-word",
+          },
+          ".fc .fc-toolbar": {
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "6px",
+          },
+          ".fc .fc-button-group": {
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "center",
+            gap: "4px",
+          },
+          ".fc .fc-button": {
+            fontSize: "0.9rem",
+            padding: "5px 10px",
+            minWidth: "32px",
+          },
+        },
         ".fc .fc-button": {
           backgroundColor: theme.palette.primary.main,
           color: theme.palette.primary.contrastText,

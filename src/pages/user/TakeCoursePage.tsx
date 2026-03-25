@@ -169,7 +169,7 @@ const TakeCoursePage = () => {
   return (
     <CustomContainer>
       <Grid sx={{ mt: 2, height: "calc(100vh - 120px)" }} container spacing={2}>
-        <Grid item xs={12} md={7} sx={{ height: "100%" }}>
+        <Grid item sm={12} md={7} sx={{ height: "100%" }}>
           <Box sx={{ height: "100%", overflow: "auto", pr: 1 }}>
             <Stack spacing={2}>
               <CourseHeader
@@ -202,7 +202,7 @@ const TakeCoursePage = () => {
             </Stack>
           </Box>
         </Grid>
-        <Grid item xs={12} md={5} sx={{ height: "100%" }}>
+        <Grid item sm={12} md={5} sx={{ height: "100%" }}>
           <Box sx={{ height: "100%", overflow: "hidden", pl: 1 }}>
             <ModuleTopicList
               modules={modulesWithTopics}
