@@ -2,9 +2,21 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useDispatch, useSelector } from "react-redux";
-import { Grid, Stack } from "@mui/material";
+import {
+  Grid,
+  Stack,
+  Tabs,
+  Tab,
+  Box,
+  Typography,
+  Rating,
+  TextField,
+  Button,
+  Paper,
+  Avatar,
+} from "@mui/material";
 import { apiClient } from "@/api/apiClient";
-import { TCoursePrviewDetails } from "@/types/course.types";
+import { TCourse, TCoursePrviewDetails } from "@/types/course.types";
 import { TTopicMediaSelection } from "@/types/media.types";
 import {
   getCurrentModule,
@@ -19,6 +31,7 @@ import { CustomContainer } from "@/components/shared/CustomContainer";
 import LoadingPage from "@/components/shared/LoadingPage";
 import ErrorPage from "@/pages/errors/ErrorPage";
 import { useAuth } from "@/hooks/useAuth";
+import { CourseRating } from "@/components/course/CourseRating";
 
 const TakeCoursePage = () => {
   const { courseGuid } = useParams();
@@ -26,6 +39,9 @@ const TakeCoursePage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const dispatch = useDispatch();
   const [heroMedia, setHeroMedia] = useState<TTopicMediaSelection | null>(null);
+  const [tabIndex, setTabIndex] = useState(0);
+
+  // Static reviews data for now
 
   const currentModuleFromRedux = useSelector(getCurrentModule);
   const currentTopicFromRedux = useSelector(getCurrentTopic);
@@ -35,13 +51,11 @@ const TakeCoursePage = () => {
     data: course,
     isLoading: isCourseLoading,
     isError: isCourseError,
-  } = useQuery<TCoursePrviewDetails>({
+  } = useQuery<TCourse>({
     queryKey: ["courseDetails", courseGuid],
     enabled: !!courseGuid,
     queryFn: async () =>
-      await apiClient.get<TCoursePrviewDetails>(
-        `/main/v1/courses/${courseGuid}/`,
-      ),
+      await apiClient.get<TCourse>(`/main/v1/courses/${courseGuid}/`),
   });
 
   const modulesWithTopics = useMemo(
@@ -154,38 +168,50 @@ const TakeCoursePage = () => {
 
   return (
     <CustomContainer>
-      <Grid sx={{ mt: 2 }} container spacing={2}>
-        <Grid item xs={12} md={7}>
-          <Stack spacing={2}>
-            <CourseHeader
-              course={course}
-              heroMedia={heroMedia}
-              onPlayIntro={
-                firstPlayable.moduleGuid && firstPlayable.topicGuid
-                  ? () =>
-                      handleTopicSelection(
-                        firstPlayable.moduleGuid!,
-                        firstPlayable.topicGuid!,
-                      )
-                  : undefined
-              }
-            />
-            {!isAdmin && (
-              <Discussions
-                instructorGuid={course.instructor_details.guid}
-                courseGuid={courseGuid!}
+      <Grid sx={{ mt: 2, height: "calc(100vh - 120px)" }} container spacing={2}>
+        <Grid item xs={12} md={7} sx={{ height: "100%" }}>
+          <Box sx={{ height: "100%", overflow: "auto", pr: 1 }}>
+            <Stack spacing={2}>
+              <CourseHeader
+                course={course}
+                heroMedia={heroMedia}
+                onPlayIntro={
+                  firstPlayable.moduleGuid && firstPlayable.topicGuid
+                    ? () =>
+                        handleTopicSelection(
+                          firstPlayable.moduleGuid!,
+                          firstPlayable.topicGuid!,
+                        )
+                    : undefined
+                }
               />
-            )}
-          </Stack>
+              {/* Tabs for Discussions and Rating */}
+              <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
+                <Tabs value={tabIndex} onChange={(_, v) => setTabIndex(v)}>
+                  <Tab label="Discussions" />
+                  <Tab label="Rating" />
+                </Tabs>
+              </Box>
+              {tabIndex === 0 && !isAdmin && (
+                <Discussions
+                  instructorGuid={course.instructor_details.guid}
+                  courseGuid={courseGuid!}
+                />
+              )}
+              {tabIndex === 1 && <CourseRating course={course} />}
+            </Stack>
+          </Box>
         </Grid>
-        <Grid item xs={12} md={5}>
-          <ModuleTopicList
-            modules={modulesWithTopics}
-            currentModule={currentModule}
-            currentTopic={currentTopic}
-            onSelect={handleTopicSelection}
-            onMediaSelect={handleMediaPreview}
-          />
+        <Grid item xs={12} md={5} sx={{ height: "100%" }}>
+          <Box sx={{ height: "100%", overflow: "hidden", pl: 1 }}>
+            <ModuleTopicList
+              modules={modulesWithTopics}
+              currentModule={currentModule}
+              currentTopic={currentTopic}
+              onSelect={handleTopicSelection}
+              onMediaSelect={handleMediaPreview}
+            />
+          </Box>
         </Grid>
       </Grid>
     </CustomContainer>

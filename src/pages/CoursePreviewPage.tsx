@@ -33,6 +33,7 @@ import ErrorPage from "@/pages/errors/ErrorPage";
 import LoadingPage from "@/components/shared/LoadingPage";
 import { ArrowRight, ArrowRightAlt } from "@mui/icons-material";
 const MEDIA_BASE_URL = import.meta.env.VITE_MEDIA_BASE_URL || "";
+
 export const CoursePreviewPage = () => {
   const { courseGuid } = useParams<{ courseGuid: string }>();
   const user = useUser();

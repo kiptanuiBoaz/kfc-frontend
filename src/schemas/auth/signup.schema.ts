@@ -35,5 +35,6 @@ export const signupInitialValues = {
     confirmPassword: "",
     is_active: true,
     is_first_time_login: true,
+    organization: null,
     // role: "USER",
 }

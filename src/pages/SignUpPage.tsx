@@ -25,6 +25,7 @@ import { apiClient } from "@/api/apiClient";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { Notify } from "notiflix";
+import { TOrgSignUpResponse } from "@/types/auth.types";
 
 const SignUpPage: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -37,6 +38,7 @@ const SignUpPage: React.FC = () => {
   const [memberSyncSuccess, setMemberSyncSuccess] = useState<string | null>(
     null,
   );
+  const [memberData, setMemberData] = useState<any>(null);
 
   const navigate = useNavigate();
 
@@ -48,7 +50,18 @@ const SignUpPage: React.FC = () => {
         setErrorMessage(null);
         setSuccessMessage(null);
 
-        await apiClient.post("/main/v1/user/register/", values);
+        let submitValues = { ...values };
+        if (tab === "kfc" && memberData) {
+          // Extract org from registration_link
+          const orgMatch =
+            memberData.registration_link?.match(/org=([a-f0-9\-]+)/i);
+          const org = orgMatch ? orgMatch[1] : undefined;
+          if (org) {
+            submitValues = { ...submitValues, organization: org };
+          }
+        }
+
+        await apiClient.post("/main/v1/user/register/", submitValues);
 
         Notify.success(
           "Account created successfully. Please check your email for the verification code.",
@@ -76,15 +89,27 @@ const SignUpPage: React.FC = () => {
     setErrorMessage(null);
     setMemberSyncSuccess(null);
     setMemberSyncLoading(true);
+    setMemberData(null);
     try {
       // Call the sync API
-      await apiClient.post("/main/v1/organization/sync/", {
-        member_id: memberId,
-      });
-      setMemberSyncSuccess(
-        `A registration link will be sent to your email if your member number is valid. Please check your inbox.`,
+      const res = await apiClient.post<TOrgSignUpResponse>(
+        "/main/v1/organization/sync/",
+        {
+          member_id: memberId,
+        },
       );
+      if (res.status === "ok") {
+        setMemberData(res.data);
+        setMemberSyncSuccess(
+          `A registration link will be sent to your email if your member number is valid. Please check your inbox.`,
+        );
+      } else {
+        setMemberSyncSuccess(
+          `A registration link will be sent to your email if your member number is valid. Please check your inbox.`,
+        );
+      }
       setMemberId("");
+      setTab("normal");
     } catch (err: any) {
       setErrorMessage(
         err?.response?.data?.message ||
@@ -388,6 +413,44 @@ const SignUpPage: React.FC = () => {
                     </Button>
                   </Stack>
                 </Box>
+                {/* Show member data if available */}
+                {memberData && (
+                  <Box sx={{ mt: 3, mb: 2 }}>
+                    <Paper elevation={2} sx={{ p: 2 }}>
+                      <Typography variant="subtitle1" sx={{ mb: 1 }}>
+                        Member Details
+                      </Typography>
+                      <Stack spacing={1}>
+                        <Typography>
+                          <b>Member ID:</b> {memberData.member_id}
+                        </Typography>
+                        <Typography>
+                          <b>Organization:</b> {memberData.org_name}
+                        </Typography>
+                        <Typography>
+                          <b>Address:</b> {memberData.address}
+                        </Typography>
+                        <Typography>
+                          <b>Status:</b>{" "}
+                          {memberData.is_active ? "Active" : "Inactive"}
+                        </Typography>
+                        <Typography>
+                          <b>Registration Link:</b>{" "}
+                          <Link
+                            href={memberData.registration_link}
+                            target="_blank"
+                            rel="noopener"
+                          >
+                            {memberData.registration_link}
+                          </Link>
+                        </Typography>
+                        <Typography>
+                          <b>Created:</b> {memberData.created ? "Yes" : "No"}
+                        </Typography>
+                      </Stack>
+                    </Paper>
+                  </Box>
+                )}
                 <Typography
                   variant="body2"
                   color="text.secondary"

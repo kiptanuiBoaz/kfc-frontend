@@ -9,13 +9,13 @@ import {
   Typography,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { TCoursePrviewDetails } from "@/types/course.types";
+import { TCourse, TCoursePrviewDetails } from "@/types/course.types";
 import { TTopicMediaSelection } from "@/types/media.types";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import { useAuth } from "@/hooks/useAuth";
 
 interface CourseHeaderProps {
-  course: TCoursePrviewDetails;
+  course: TCourse;
   onPlayIntro?: () => void;
   heroMedia?: TTopicMediaSelection | null;
 }
@@ -154,7 +154,16 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
                     value={progress}
                     size={50}
                     thickness={4}
-                    sx={{ color: theme.palette.primary.main }}
+                    sx={{
+                      color:
+                        progress < 20
+                          ? "error.main"
+                          : progress < 40
+                            ? "warning.main"
+                            : progress < 80
+                              ? "info.main"
+                              : "success.main",
+                    }}
                   />
                   <Box
                     sx={{
@@ -169,8 +178,21 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
                       flexDirection: "column",
                     }}
                   >
-                    <Typography variant="subtitle1" fontWeight={700}>
-                      {progress}%
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight={700}
+                      fontSize={12}
+                      color={
+                        progress < 20
+                          ? "error.main"
+                          : progress < 40
+                            ? "warning.main"
+                            : progress < 80
+                              ? "info.main"
+                              : "success.main"
+                      }
+                    >
+                      {progress.toFixed(0)}%
                     </Typography>
                   </Box>
                 </Box>

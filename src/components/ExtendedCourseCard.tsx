@@ -8,7 +8,18 @@ import {
   Chip,
   Stack,
   Typography,
+  Popover,
+  IconButton,
+  TextField,
+  Rating,
+  useMediaQuery,
+  Tooltip,
 } from "@mui/material";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
+import BookmarkIcon from "@mui/icons-material/Bookmark";
+import RateReviewIcon from "@mui/icons-material/RateReview";
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
 import MilitaryTechOutlinedIcon from "@mui/icons-material/MilitaryTechOutlined";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
@@ -21,6 +32,7 @@ import { apiClient } from "@/api/apiClient";
 import { toSentenceCase } from "@/utils/toSentenceCase";
 import { formatDate } from "date-fns";
 import { LocationOnOutlined } from "@mui/icons-material";
+import { Notify } from "notiflix";
 
 interface ExtendedCourseCardProps {
   course: TEnrolledCourse;
@@ -33,6 +45,48 @@ const ExtendedCourseCard: React.FC<ExtendedCourseCardProps> = ({
 }) => {
   const theme = useTheme();
   const navigate = useNavigate();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const [downloading, setDownloading] = useState(false);
+  const [popoverAnchor, setPopoverAnchor] = useState<null | HTMLElement>(null);
+  const [interactionLoading, setInteractionLoading] = useState(false);
+  const [liked, setLiked] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [rating, setRating] = useState<number | null>(null);
+  const [reviewText, setReviewText] = useState("");
+  const [showReview, setShowReview] = useState(false);
+  const [hovered, setHovered] = useState(false);
+
+  const handlePopoverClose = () => {
+    setPopoverAnchor(null);
+    setShowReview(false);
+    setRating(null);
+    setReviewText("");
+  };
+
+  const handleInteraction = async (interaction_type: "like" | "save") => {
+    setInteractionLoading(true);
+    try {
+      const payload: any = {
+        course_guid: course.guid,
+        interaction_type,
+      };
+      await apiClient.post("/main/v1/courses/interactions/", payload);
+      if (interaction_type === "like") setLiked(true);
+      if (interaction_type === "save") setSaved(true);
+      Notify.success(
+        `Course ${interaction_type === "like" ? "liked" : "saved"}!`,
+      );
+      handlePopoverClose();
+    } catch (err) {
+      console.error(err);
+      Notify.failure(
+        `Failed to ${interaction_type === "like" ? "like" : "save"} course. Try again later.`,
+      );
+    } finally {
+      setInteractionLoading(false);
+    }
+  };
+
   const handleViewDetails = () => {
     navigate(`/courses/preview/${course.guid}`);
   };
@@ -40,8 +94,6 @@ const ExtendedCourseCard: React.FC<ExtendedCourseCardProps> = ({
   const handleEnroll = () => {
     navigate(`/courses/${course.guid}/enroll`);
   };
-
-  const [downloading, setDownloading] = useState(false);
 
   const handleDownloadCertificate = async () => {
     setDownloading(true);
@@ -51,7 +103,6 @@ const ExtendedCourseCard: React.FC<ExtendedCourseCardProps> = ({
         {},
         { responseType: "blob" },
       );
-
       // @ts-ignore
       const url = window.URL.createObjectURL(response);
       const a = document.createElement("a");
@@ -61,8 +112,15 @@ const ExtendedCourseCard: React.FC<ExtendedCourseCardProps> = ({
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
+      Notify.success(
+        "Certificate downloaded successfully!, you should find it in your downloads folder.",
+        {
+          clickToClose: true,
+        },
+      );
     } catch (err) {
-      alert("Failed to download certificate.");
+      Notify.failure("Failed to download certificate.");
+      console.error(err);
     } finally {
       setDownloading(false);
     }
@@ -78,11 +136,14 @@ const ExtendedCourseCard: React.FC<ExtendedCourseCardProps> = ({
         overflow: "hidden",
         transition: "transform 0.3s ease, box-shadow 0.3s ease",
         height: "100%",
+        position: "relative",
         "&:hover": {
           transform: "translateY(-6px)",
           boxShadow: 6,
         },
       }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       <Box
         sx={{
@@ -111,6 +172,49 @@ const ExtendedCourseCard: React.FC<ExtendedCourseCardProps> = ({
           },
         }}
       >
+        {/* Like and Save icons at top left, only on hover */}
+        {hovered && (
+          <Box
+            sx={{
+              position: "absolute",
+              top: 8,
+              left: 8,
+              zIndex: 3,
+              display: "flex",
+              gap: 1,
+              background: "rgba(255,255,255,0.85)",
+              borderRadius: 2,
+              p: 0.5,
+              boxShadow: 1,
+            }}
+          >
+            <IconButton
+              color={liked ? "error" : "default"}
+              onClick={() => handleInteraction("like")}
+              disabled={interactionLoading || liked}
+              size="small"
+              sx={{
+                backgroundColor: "transparent",
+                "&:hover": { backgroundColor: "error.light" },
+              }}
+            >
+              {liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+            </IconButton>
+            <IconButton
+              color={saved ? "primary" : "default"}
+              onClick={() => handleInteraction("save")}
+              disabled={interactionLoading || saved}
+              size="small"
+              sx={{
+                backgroundColor: "transparent",
+                "&:hover": { backgroundColor: "info.light" },
+              }}
+            >
+              {saved ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+            </IconButton>
+          </Box>
+        )}
+        {/* Optionally, keep review/rating in a popover if needed */}
         <Box
           component="img"
           src={
@@ -131,8 +235,7 @@ const ExtendedCourseCard: React.FC<ExtendedCourseCardProps> = ({
           sx={{
             position: "absolute",
             top: 12,
-            right: 12,
-
+            right: 52,
             fontWeight: 700,
             zIndex: 2,
             textTransform: "capitalize",

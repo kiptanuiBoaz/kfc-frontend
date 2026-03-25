@@ -73,3 +73,18 @@ export interface TImageUpdateRes {
 }
 
 export default AuthState;
+
+
+export interface TOrgSignUpResponse {
+    status: string,
+    message: string,
+    data: {
+        guid: string,
+        member_id: string,
+        org_name: string,
+        address: string,
+        is_active: boolean,
+        registration_link: string,
+        created: boolean
+    }
+}

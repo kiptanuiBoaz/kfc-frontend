@@ -84,6 +84,7 @@ export const UserCalendar = ({ isCalendarOpen, setIsCalendarOpen }) => {
                 return (
                   <Event
                     onClick={() => setIsCalendarOpen(false)}
+                    // @ts-ignore
                     course={course}
                     arg={arg}
                   />

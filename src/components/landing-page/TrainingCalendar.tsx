@@ -13,8 +13,9 @@ import { CustomContainer } from "@/components/shared/CustomContainer";
 import Event from "@/components/calendar/Event";
 import { GlobalStyles } from "@/components/calendar/GlobalStyles";
 import LoadingPage from "@/components/shared/LoadingPage";
+import { max } from "date-fns";
 
-const TrainingCalendar = () => {
+export const TrainingCalendar = () => {
   const {
     data: courses = [],
     isLoading,
@@ -29,7 +30,7 @@ const TrainingCalendar = () => {
   const physicalCourses = courses.filter(
     (course) => course.learning_mode === "PHYSICAL" && course.training_date,
   );
-  console.log("Physical Courses for Calendar:", physicalCourses);
+
   // Map to FullCalendar event format
   const events = physicalCourses.map((course) => ({
     id: course.guid || course.id,
@@ -48,8 +49,17 @@ const TrainingCalendar = () => {
 
   return (
     <>
-      <Paper elevation={1} sx={{ py: [2, 4, 6], p: 3, borderRadius: 3 }}>
-        <CustomContainer>
+      <GlobalStyles />
+      <Paper elevation={1}>
+        <CustomContainer
+          sx={{
+            py: [2, 4, 6],
+            p: 3,
+            borderRadius: 3,
+            maxWidth: "1200px",
+            mx: "auto",
+          }}
+        >
           <Typography
             color="primary"
             gutterBottom
@@ -66,7 +76,6 @@ const TrainingCalendar = () => {
             Stay updated with our upcoming physical training sessions.
           </Typography>
           <Box>
-            <GlobalStyles />
             <FullCalendar
               ref={calendarRef}
               plugins={[
@@ -105,5 +114,3 @@ const TrainingCalendar = () => {
     </>
   );
 };
-
-export default TrainingCalendar;

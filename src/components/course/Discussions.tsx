@@ -46,7 +46,7 @@ const Discussions: React.FC<DiscussionsProps> = ({
     }) => {
       const response = await apiClient.post(
         "/main/v1/discussions/create/",
-        data
+        data,
       );
       return response;
     },
