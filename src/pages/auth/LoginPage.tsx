@@ -56,13 +56,13 @@ const LoginPage: React.FC = () => {
   const handleResendOtp = async () => {
     if (!loginCredentials) {
       throw new Error(
-        "Missing login credentials. Please try signing in again."
+        "Missing login credentials. Please try signing in again.",
       );
     }
 
     await performLoginRequest(
       loginCredentials.email,
-      loginCredentials.password
+      loginCredentials.password,
     );
   };
 
@@ -171,7 +171,7 @@ const LoginPage: React.FC = () => {
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       error={Boolean(
-                        formik.touched.email && formik.errors.email
+                        formik.touched.email && formik.errors.email,
                       )}
                       helperText={formik.touched.email && formik.errors.email}
                       disabled={formik.isSubmitting}
@@ -187,7 +187,7 @@ const LoginPage: React.FC = () => {
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       error={Boolean(
-                        formik.touched.password && formik.errors.password
+                        formik.touched.password && formik.errors.password,
                       )}
                       helperText={
                         formik.touched.password && formik.errors.password
@@ -219,7 +219,20 @@ const LoginPage: React.FC = () => {
                         },
                       }}
                     />
-                    <Box textAlign="right">
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
+                    >
+                      <Link
+                        component={RouterLink}
+                        to={PATHS.HOME}
+                        underline="hover"
+                        variant="body2"
+                        tabIndex={formik.isSubmitting ? -1 : 0}
+                      >
+                        Go Home
+                      </Link>
                       <Link
                         component={RouterLink}
                         to={PATHS.RESET_PASSWORD}
@@ -249,7 +262,7 @@ const LoginPage: React.FC = () => {
                   Don&apos;t have an account?{" "}
                   <Link
                     component={RouterLink}
-                    to={PATHS.SIGN_UP}
+                    to={PATHS.USER_SIGN_UP}
                     underline="hover"
                     tabIndex={formik.isSubmitting ? -1 : 0}
                   >

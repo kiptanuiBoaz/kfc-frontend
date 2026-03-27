@@ -33,12 +33,20 @@ function App() {
   useAuthRestore();
 
   const location = useLocation();
-  console.log("Current location:", location.pathname);
   const isAdminRoute = isDashboardPage(location.pathname);
+  const authRoutes = [
+    "/login",
+    "/sign-up",
+    "/member-sign-up",
+    "/reset-password",
+    "/reset-password/confirm",
+  ];
+  const isAuthRoute = authRoutes.includes(location.pathname);
+
   return (
     <Box>
-      <Navbar />
-      <Box sx={{ mt: location.pathname === "/" ? 0 : "80px" }} />
+      {!isAuthRoute && <Navbar />}
+      <Box sx={{ mt: location.pathname === "/" || isAuthRoute ? 0 : "80px" }} />
       <Box
         component="main"
         sx={{
@@ -50,7 +58,7 @@ function App() {
         <Box sx={{ flexGrow: 1 }}>
           <Routes>{renderRoutes(routes)}</Routes>
         </Box>
-        {!isAdminRoute && <Footer />}
+        {(!isAdminRoute || isAuthRoute) && <Footer />}
       </Box>
     </Box>
   );

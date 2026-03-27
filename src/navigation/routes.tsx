@@ -5,13 +5,15 @@ import AuthGuard from "@/guards/AuthGuard";
 import RoleGuard from "@/guards/RoleGuard";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Outlet } from "react-router-dom";
+import MemberSignUpPage from "@/pages/auth/MemberSignUp";
+import UserSignUpPage from "@/pages/auth/UserSignUpPage";
 const OrgRegistrationPage = lazy(() => import("@/pages/OrgRegistrationPage"));
 
 // Lazy imports
 const LandingPage = lazy(() => import("@/pages/LandingPage"));
 const BrowseCoursesPage = lazy(() => import("@/pages/BrowseCoursesPage"));
-const LoginPage = lazy(() => import("@/pages/LoginPage"));
-const SignUpPage = lazy(() => import("@/pages/SignUpPage"));
+const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
+const SignUpPage = lazy(() => import("@/pages/auth/UserSignUpPage"));
 const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
 const ResetPasswordConfirmPage = lazy(
   () => import("@/pages/ResetPasswordConfirmPage"),
@@ -81,8 +83,12 @@ export const routes = [
     element: <LazyPage component={LoginPage} />,
   },
   {
-    path: PATHS.SIGN_UP,
-    element: <LazyPage component={SignUpPage} />,
+    path: PATHS.MEMBER_SIGN_UP,
+    element: <LazyPage component={MemberSignUpPage} />,
+  },
+  {
+    path: PATHS.USER_SIGN_UP,
+    element: <LazyPage component={UserSignUpPage} />,
   },
   {
     path: PATHS.RESET_PASSWORD,
