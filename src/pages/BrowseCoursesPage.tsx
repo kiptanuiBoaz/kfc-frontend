@@ -38,7 +38,6 @@ const TAB_LIKED = 1;
 const TAB_SAVED = 2;
 
 const BrowseCoursesPage: React.FC = () => {
-  const user = useUser();
   const isAuthenticated = useIsAuthenticated();
   const [filters, setFilters] = React.useState<FilterState>({
     search: "",
@@ -46,6 +45,7 @@ const BrowseCoursesPage: React.FC = () => {
     level: defaultOptionValue,
     instructor: defaultOptionValue,
   });
+  // If not authenticated, force tab to TAB_ALL and prevent switching
   const [tab, setTab] = React.useState<number>(0);
 
   const { data: myCourses = [] } = useMyCourses();
@@ -98,6 +98,13 @@ const BrowseCoursesPage: React.FC = () => {
     ],
     [courses],
   );
+
+  // If not authenticated, always show All Courses tab
+  React.useEffect(() => {
+    if (!isAuthenticated && tab !== TAB_ALL) {
+      setTab(TAB_ALL);
+    }
+  }, [isAuthenticated, tab]);
 
   // Filtering logic for each tab
   const searchTerm = filters.search.trim().toLowerCase();
@@ -181,18 +188,20 @@ const BrowseCoursesPage: React.FC = () => {
           </Typography>
         </Stack>
 
-        {/* Tabs for All, Liked, Saved */}
-        <Tabs
-          value={tab}
-          onChange={(_, v) => setTab(v)}
-          sx={{ mb: 2 }}
-          variant="scrollable"
-          scrollButtons="auto"
-        >
-          <Tab label="All Courses" />
-          <Tab label="Liked Courses" />
-          <Tab label="Saved Courses" />
-        </Tabs>
+        {/* Tabs for All, Liked, Saved - only show if authenticated */}
+        {isAuthenticated && (
+          <Tabs
+            value={tab}
+            onChange={(_, v) => setTab(v)}
+            sx={{ mb: 2 }}
+            variant="scrollable"
+            scrollButtons="auto"
+          >
+            <Tab label="All Courses" />
+            <Tab label="Liked Courses" />
+            <Tab label="Saved Courses" />
+          </Tabs>
+        )}
 
         {/* Filters */}
         {tab === TAB_ALL ? (
