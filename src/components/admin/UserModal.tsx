@@ -51,7 +51,10 @@ export const UserModal: React.FC<UserModalProps> = ({
     isError,
   } = useQuery<TRole[]>({
     queryKey: ["roles"],
-    queryFn: () => apiClient.get<TRole[]>("/main/v1/role/all/"),
+    queryFn: async () => {
+      const response = await apiClient.get<{ data: TRole[] }>("/main/v1/role/all/");
+      return response?.data || [];
+    },
     enabled: open,
   });
 
@@ -65,7 +68,7 @@ export const UserModal: React.FC<UserModalProps> = ({
           email: user.email,
           phone_number: user.phone_number || "",
 
-          role: user.role.guid,
+          role: user.role?.guid || "",
           is_active: user.is_active,
         }
       : userInitialValues,

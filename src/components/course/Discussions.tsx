@@ -34,8 +34,10 @@ const Discussions: React.FC<DiscussionsProps> = ({
 
   const { data: discussions = [], isLoading } = useQuery<TCourseDiscussion[]>({
     queryKey: ["discussions", courseGuid],
-    queryFn: async () =>
-      await apiClient.get(`/main/v1/courses/${courseGuid}/discussions/`),
+    queryFn: async () => {
+      const response = await apiClient.get<{ data: TCourseDiscussion[] }>(`/main/v1/courses/${courseGuid}/discussions/`);
+      return response?.data || [];
+    },
   });
 
   const createMutation = useMutation({
@@ -116,7 +118,7 @@ const Discussions: React.FC<DiscussionsProps> = ({
           <ListItem disableGutters key={discussion.guid}>
             <Card sx={{ p: 2, width: "100%" }}>
               <Stack direction="row" spacing={2} alignItems="flex-start">
-                <Avatar>{discussion.user_details?.[0] || "U"}</Avatar>
+                <Avatar>{discussion.user_details?.name?.charAt(0) || "U"}</Avatar>
                 <Box flex={1}>
                   <Stack direction="row" spacing={1} alignItems="center">
                     <Typography variant="subtitle2" fontWeight="bold">

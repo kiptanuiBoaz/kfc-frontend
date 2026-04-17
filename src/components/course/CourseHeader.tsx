@@ -57,26 +57,28 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({
         <Grid2 size={12}>
           <Box sx={{ position: "relative" }}>
             {heroMedia?.type === "video" ? (
-              <video
+              <Box
+                component="video"
                 key={heroMedia.url}
                 controls
                 autoPlay
                 src={heroMedia.url}
-                style={{
+                sx={{
                   width: "100%",
                   height: "500px",
-                  borderRadius: 8,
+                  borderRadius: 1,
                   objectFit: "cover",
                 }}
               />
             ) : (
-              <img
+              <Box
+                component="img"
                 src={displayImage}
                 alt={course.title}
-                style={{
+                sx={{
                   width: "100%",
                   height: "500px",
-                  borderRadius: 8,
+                  borderRadius: 1,
                   objectFit: "cover",
                 }}
               />

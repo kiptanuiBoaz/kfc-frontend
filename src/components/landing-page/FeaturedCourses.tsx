@@ -23,7 +23,10 @@ const FeaturedCourses = () => {
     isError,
   } = useQuery<TCourse[]>({
     queryKey: ["adminCourses"],
-    queryFn: () => apiClient.get<TCourse[]>("/main/v1/public/featured-courses"),
+    queryFn: async () => {
+      const response = await apiClient.get<TCourse[]>("/main/v1/public/featured-courses");
+      return response || [];
+    },
   });
   if (isLoading) {
     return (

@@ -29,10 +29,24 @@ export const CourseRating = ({ course }: { course: TCourse }) => {
     error,
   } = useQuery<TCourseInterractions>({
     queryKey: ["course-interactions", course.guid],
-    queryFn: () =>
-      apiClient.get<TCourseInterractions>(
+    queryFn: async () => {
+      const response = await apiClient.get<{ data: TCourseInterractions }>(
         `/main/v1/interactions/${course.guid}/all/`,
-      ),
+      );
+      return response?.data || {
+        summary: {
+          likes: 0,
+          saves: 0,
+          average_rating: 0,
+          ratings_count: 0,
+          reviews_count: 0,
+          user_liked: false,
+          user_saved: false,
+          user_rating: null,
+        },
+        reviews: [],
+      };
+    },
     enabled: !!course.guid,
   });
 
@@ -143,7 +157,7 @@ export const CourseRating = ({ course }: { course: TCourse }) => {
         {reviews.length === 0 ? (
           <Typography color="text.secondary">No reviews yet.</Typography>
         ) : (
-          reviews.map((review) => (
+          reviews.map((review: any) => (
             <Paper key={review.guid} sx={{ p: 2 }}>
               <Stack direction="row" spacing={2} alignItems="flex-start">
                 <Avatar src={`${MEDIA_BASE_URL}${review.user.image}`}>
