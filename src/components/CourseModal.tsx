@@ -69,15 +69,18 @@ export const CourseModal: React.FC<CourseModalProps> = ({
     isError,
   } = useQuery<AuthUser[]>({
     queryKey: ["adminUsers"],
-    queryFn: () => apiClient.get<AuthUser[]>("/main/v1/user/all/"),
+    queryFn: async () => {
+      const response = await apiClient.get<{ data: AuthUser[] }>("/main/v1/user/all/");
+      return response?.data || [];
+    },
   });
 
   // Filter only instructors
   const instructorOptions = Array.isArray(users)
-    ? users.filter((u) =>
+    ? users.filter((u: AuthUser) =>
         u.role && typeof u.role === "object"
           ? u.role.name === "INSTRUCTOR"
-          : u.role.name === "INSTRUCTOR",
+          : u.role === "INSTRUCTOR",
       )
     : [];
 
@@ -411,7 +414,7 @@ export const CourseModal: React.FC<CourseModalProps> = ({
                     placeholder="Add a tag"
                     error={Boolean(formik.touched.tags && formik.errors.tags)}
                     helperText={
-                      formik.touched.tags && (formik.errors.tags as string)
+                      (formik.touched.tags && formik.errors.tags as string) || ""
                     }
                   />
                 </Grid>
@@ -428,8 +431,9 @@ export const CourseModal: React.FC<CourseModalProps> = ({
                       formik.errors.prerequisites,
                     )}
                     helperText={
-                      formik.touched.prerequisites &&
-                      (formik.errors.prerequisites as string)
+                      (formik.touched.prerequisites &&
+                        (formik.errors.prerequisites as string)) ||
+                      ""
                     }
                   />
                 </Grid>
@@ -445,8 +449,9 @@ export const CourseModal: React.FC<CourseModalProps> = ({
                       formik.touched.objectives && formik.errors.objectives,
                     )}
                     helperText={
-                      formik.touched.objectives &&
-                      (formik.errors.objectives as string)
+                      (formik.touched.objectives &&
+                        (formik.errors.objectives as string)) ||
+                      ""
                     }
                   />
                 </Grid>

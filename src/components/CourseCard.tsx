@@ -23,6 +23,7 @@ import { truncateString } from "@/utils/truncateString";
 import { toSentenceCase } from "@/utils/toSentenceCase";
 import { format } from "date-fns";
 import { ArrowForward } from "@mui/icons-material";
+import { MEDIA_BASE_URL } from "@/api/axios";
 
 export interface CourseCardProps {
   course: TCourse;
@@ -195,7 +196,9 @@ const CourseCard: React.FC<CourseCardProps> = ({
         <Box
           component="img"
           src={
-            course?.image ? course?.image : "/images/logos/horizontal_logo.png"
+            course?.image
+              ? `${MEDIA_BASE_URL}${course.image}`
+              : "/images/logos/horizontal_logo.png"
           }
           alt={title}
         />
@@ -256,7 +259,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
           )}
           <Typography variant="subtitle2"> {course.category}</Typography>
           <Typography variant="body2" color="text.secondary">
-            {truncateString(description, 200)}
+            {truncateString(description ?? "", 200)}
           </Typography>
         </Stack>
         <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mt: 2 }}>
@@ -286,17 +289,28 @@ const CourseCard: React.FC<CourseCardProps> = ({
         </Stack>
       </CardContent>
       <CardActions sx={{ px: 2, pb: 2 }}>
-        <Button
-          endIcon={<ArrowForward />}
-          fullWidth
-          variant="contained"
-          color="primary"
-          onClick={href ? undefined : handleAction}
-          component={href ? "a" : undefined}
-          href={href}
-        >
-          {ctaLabel}
-        </Button>
+        {href ? (
+          <Button
+            endIcon={<ArrowForward />}
+            fullWidth
+            variant="contained"
+            color="primary"
+            href={href}
+            component="a"
+          >
+            {ctaLabel}
+          </Button>
+        ) : (
+          <Button
+            endIcon={<ArrowForward />}
+            fullWidth
+            variant="contained"
+            color="primary"
+            onClick={handleAction}
+          >
+            {ctaLabel}
+          </Button>
+        )}
       </CardActions>
     </Card>
   );

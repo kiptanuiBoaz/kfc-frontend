@@ -175,10 +175,11 @@ const MediaPlayer: React.FC<VideoPlayerProps> = ({ topic, onMediaSelect }) => {
             }}
           >
             {modalContent?.type === "image" && (
-              <img
+              <Box
+                component="img"
                 src={modalContent.url}
                 alt="Modal Image"
-                style={{
+                sx={{
                   maxWidth: "100%",
                   maxHeight: "80vh",
                   objectFit: "contain",
@@ -186,10 +187,11 @@ const MediaPlayer: React.FC<VideoPlayerProps> = ({ topic, onMediaSelect }) => {
               />
             )}
             {modalContent?.type === "video" && (
-              <video
+              <Box
+                component="video"
                 controls
                 src={modalContent.url}
-                style={{ maxWidth: "100%", maxHeight: "80vh" }}
+                sx={{ maxWidth: "100%", maxHeight: "80vh" }}
               />
             )}
           </Box>
