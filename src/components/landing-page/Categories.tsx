@@ -60,9 +60,9 @@ const categories: Category[] = [
 export default function Categories() {
   const navigate = useNavigate();
 
-  const handleCategoryClick = (categoryId: string) => {
+  const handleCategoryClick = (categoryTitle: string) => {
     // Navigate to browse courses with category filter
-    navigate(`/browse-courses?category=${categoryId}`);
+    navigate(`/courses?category=${encodeURIComponent(categoryTitle)}`);
   };
 
   return (
@@ -109,7 +109,7 @@ export default function Categories() {
                 }}
               >
                 <CardActionArea
-                  onClick={() => handleCategoryClick(category.id)}
+                  onClick={() => handleCategoryClick(category.title)}
                   sx={{
                     height: "100%",
                     display: "flex",

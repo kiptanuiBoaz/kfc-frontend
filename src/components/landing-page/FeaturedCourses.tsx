@@ -22,12 +22,28 @@ const FeaturedCourses = () => {
     isLoading,
     isError,
   } = useQuery<TCourse[]>({
-    queryKey: ["adminCourses"],
+    queryKey: ["public-featured-courses"],
     queryFn: async () => {
-      const response = await apiClient.get<TCourse[]>("/main/v1/public/featured-courses");
+      const response = await apiClient.get<TCourse[]>("/main/v1/public/featured-courses/");
       return response || [];
     },
   });
+
+  if (isError) {
+    return (
+      <CustomContainer>
+        <Box sx={{ py: 8, textAlign: "center" }}>
+          <Typography variant="h5" color="error" gutterBottom>
+            Failed to load featured courses
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Please try refreshing the page later.
+          </Typography>
+        </Box>
+      </CustomContainer>
+    );
+  }
+
   if (isLoading) {
     return (
       <CustomContainer>
@@ -134,8 +150,8 @@ const FeaturedCourses = () => {
           Our Featured Courses
         </Typography>
         <Typography textAlign={"center"} variant="body1" color="text.secondary">
-          Discover popular corses designed to address critical needs and latest
-          trentds in fresh produce industry.
+          Discover popular courses designed to address critical needs and latest
+          trends in fresh produce industry.
         </Typography>
 
         <Grid container spacing={4} sx={{ mt: 2 }}>

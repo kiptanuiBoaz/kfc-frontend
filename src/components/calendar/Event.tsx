@@ -12,7 +12,7 @@ interface EventProps {
 }
 const Event = ({ course, arg, onClick }: EventProps) => {
   const theme = useTheme();
-  const isPast = new Date(course.training_date) < new Date();
+  const isPast = course.training_date ? new Date(course.training_date) < new Date() : false;
   return (
     <MuiLink
       component={RouterLink}

@@ -23,6 +23,8 @@ import { isCourseEnrolled } from "@/utils/isCourseEnrolled";
 import { useIsAuthenticated, useUser } from "@/hooks/useAuth";
 import { useMyCourses } from "@/hooks/useMyCourses";
 import LoadingPage from "@/components/shared/LoadingPage";
+import { useSearchParams } from "react-router-dom";
+import { categories as categoryList } from "@/lib/categories";
 
 const defaultOptionValue = "all";
 
@@ -30,7 +32,7 @@ type FilterState = {
   search: string;
   learningMode: string;
   level: string;
-  instructor: string;
+  category: string;
 };
 
 const TAB_ALL = 0;
@@ -38,12 +40,14 @@ const TAB_LIKED = 1;
 const TAB_SAVED = 2;
 
 const BrowseCoursesPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialCategory = searchParams.get("category") || defaultOptionValue;
   const isAuthenticated = useIsAuthenticated();
   const [filters, setFilters] = React.useState<FilterState>({
     search: "",
     learningMode: defaultOptionValue,
     level: defaultOptionValue,
-    instructor: defaultOptionValue,
+    category: initialCategory,
   });
   // If not authenticated, force tab to TAB_ALL and prevent switching
   const [tab, setTab] = React.useState<number>(0);
@@ -57,7 +61,10 @@ const BrowseCoursesPage: React.FC = () => {
     refetch,
   } = useQuery<TCourse[]>({
     queryKey: ["public-courses"],
-    queryFn: () => apiClient.get<TCourse[]>("/main/v1/public/courses/"),
+    queryFn: () =>
+      apiClient
+        .get<TCourse[]>("/main/v1/public/courses/")
+        .then((res) => res ?? []),
     select: (data) =>
       [...data].sort((a, b) => {
         const aDate = a.updated_at ? new Date(a.updated_at).getTime() : 0;
@@ -70,7 +77,7 @@ const BrowseCoursesPage: React.FC = () => {
     () => [
       { value: defaultOptionValue, label: "All Modes" },
       ...Array.from(new Set(courses.map((course) => course.learning_mode)))
-        .filter(Boolean)
+        .filter((mode): mode is string => Boolean(mode))
         .map((mode) => ({
           value: mode,
           label: mode.charAt(0).toUpperCase() + mode.slice(1),
@@ -84,19 +91,17 @@ const BrowseCoursesPage: React.FC = () => {
       { value: defaultOptionValue, label: "All Levels" },
       ...Array.from(
         new Set(courses.map((course) => course.expertise_level)),
-      ).map((level) => ({ value: level, label: level })),
+      ).filter((level): level is NonNullable<typeof level> => Boolean(level)).map((level) => ({ value: level, label: level })),
     ],
     [courses],
   );
 
-  const instructors = React.useMemo(
+  const schoolOptions = React.useMemo(
     () => [
-      { value: defaultOptionValue, label: "All Instructors" },
-      ...Array.from(
-        new Set(courses.map((course) => `${course.instructor_name}`)),
-      ).map((instructor) => ({ value: instructor, label: instructor })),
+      { value: defaultOptionValue, label: "All Schools" },
+      ...categoryList.map((category) => ({ value: category, label: category })),
     ],
-    [courses],
+    [],
   );
 
   // If not authenticated, always show All Courses tab
@@ -106,18 +111,26 @@ const BrowseCoursesPage: React.FC = () => {
     }
   }, [isAuthenticated, tab]);
 
+  // Sync state with query param if it changes
+  React.useEffect(() => {
+    const cat = searchParams.get("category");
+    if (cat && cat !== filters.category) {
+      setFilters((prev) => ({ ...prev, category: cat }));
+    }
+  }, [searchParams]);
+
   // Filtering logic for each tab
   const searchTerm = filters.search.trim().toLowerCase();
 
   const filterBySearch = (course: TCourse) =>
     searchTerm.length === 0 ||
     course.title.toLowerCase().includes(searchTerm) ||
-    course.description.toLowerCase().includes(searchTerm) ||
+    course.description?.toLowerCase().includes(searchTerm) ||
     (course.tags || []).some((tag) => tag.toLowerCase().includes(searchTerm));
 
   const filteredCourses = React.useMemo(() => {
     if (tab === TAB_ALL) {
-      return courses.filter((course) => {
+      return courses.filter((course: TCourse) => {
         const matchesSearch = filterBySearch(course);
         const matchesLearningMode =
           filters.learningMode === defaultOptionValue ||
@@ -125,24 +138,24 @@ const BrowseCoursesPage: React.FC = () => {
         const matchesLevel =
           filters.level === defaultOptionValue ||
           course.expertise_level === filters.level;
-        const matchesInstructor =
-          filters.instructor === defaultOptionValue ||
-          `${course.instructor_name}` === filters.instructor;
+        const matchesCategory =
+          filters.category === defaultOptionValue ||
+          course.category === filters.category;
         return (
           matchesSearch &&
           matchesLearningMode &&
           matchesLevel &&
-          matchesInstructor
+          matchesCategory
         );
       });
     } else if (tab === TAB_LIKED) {
       return courses.filter(
-        (course) =>
+        (course: TCourse) =>
           course.course_iteractions?.user_liked && filterBySearch(course),
       );
     } else if (tab === TAB_SAVED) {
       return courses.filter(
-        (course) =>
+        (course: TCourse) =>
           course.course_iteractions?.user_saved && filterBySearch(course),
       );
     }
@@ -161,7 +174,7 @@ const BrowseCoursesPage: React.FC = () => {
       search: "",
       learningMode: defaultOptionValue,
       level: defaultOptionValue,
-      instructor: defaultOptionValue,
+      category: defaultOptionValue,
     });
   };
 
@@ -183,7 +196,7 @@ const BrowseCoursesPage: React.FC = () => {
             color="text.secondary"
             sx={{ fontSize: { xs: "1rem", sm: "1.1rem" } }}
           >
-            Filter by category, level, or instructor to find the perfect course
+            Filter by school, level, or mode to find the perfect course
             for your learning goals.
           </Typography>
         </Stack>
@@ -238,7 +251,7 @@ const BrowseCoursesPage: React.FC = () => {
                 slotProps={{
                   select: {
                     displayEmpty: true,
-                    renderValue: (value) =>
+                    renderValue: (value: unknown) =>
                       learningModes.find((option) => option.value === value)
                         ?.label ?? "All Modes",
                   },
@@ -263,7 +276,7 @@ const BrowseCoursesPage: React.FC = () => {
                 slotProps={{
                   select: {
                     displayEmpty: true,
-                    renderValue: (value) =>
+                    renderValue: (value: unknown) =>
                       levels.find((option) => option.value === value)?.label ??
                       "All Levels",
                   },
@@ -281,21 +294,21 @@ const BrowseCoursesPage: React.FC = () => {
               <TextField
                 fullWidth
                 select
-                value={filters.instructor}
+                value={filters.category}
                 onChange={(event) =>
-                  handleFilterChange("instructor", event.target.value)
+                  handleFilterChange("category", event.target.value)
                 }
                 slotProps={{
                   select: {
                     displayEmpty: true,
-                    renderValue: (value) =>
-                      instructors.find((option) => option.value === value)
-                        ?.label ?? "All Instructors",
+                    renderValue: (value: unknown) =>
+                      schoolOptions.find((option) => option.value === value)
+                        ?.label ?? "All Schools",
                   },
                 }}
                 sx={{ fontSize: { xs: "0.95rem", sm: "1rem" } }}
               >
-                {instructors.map((option) => (
+                {schoolOptions.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
                     {option.label}
                   </MenuItem>
