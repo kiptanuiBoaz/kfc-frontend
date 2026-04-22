@@ -22,20 +22,23 @@ export const TrainingCalendar = () => {
     isError,
   } = useQuery<TCourse[]>({
     queryKey: ["public-courses"],
-    queryFn: () => apiClient.get<TCourse[]>("/main/v1/public/courses/"),
+    queryFn: () =>
+      apiClient
+        .get<TCourse[]>("/main/v1/public/courses/")
+        .then((res) => res ?? []),
     enabled: true,
   });
 
   // Filter only physical courses with a valid training_date
-  const physicalCourses = courses.filter(
-    (course) => course.learning_mode === "PHYSICAL" && course.training_date,
+  const physicalCourses = (courses as TCourse[]).filter(
+    (course: TCourse) => course.learning_mode === "PHYSICAL" && course.training_date,
   );
 
   // Map to FullCalendar event format
-  const events = physicalCourses.map((course) => ({
-    id: course.guid || course.id,
+  const events = physicalCourses.map((course: TCourse) => ({
+    id: course.guid || course.id.toString(),
     title: course.title + (course.venue ? ` @ ${course.venue}` : ""),
-    start: new Date(course.training_date),
+    start: course.training_date ? new Date(course.training_date) : new Date(),
     allDay: true,
     extendedProps: {
       description: course.description,
@@ -97,7 +100,7 @@ export const TrainingCalendar = () => {
               eventContent={(arg) => {
                 // Find the course for this event
                 const course = physicalCourses.find(
-                  (c) => (c.guid || c.id) === arg.event.id,
+                  (c: TCourse) => (c.guid || c.id.toString()) === arg.event.id,
                 );
                 if (!course) return null;
                 return <Event course={course} arg={arg} />;

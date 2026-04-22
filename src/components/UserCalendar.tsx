@@ -10,20 +10,30 @@ import React, { useRef } from "react";
 import { Box, Dialog, Typography } from "@mui/material";
 import Event from "@/components/calendar/Event";
 import { GlobalStyles } from "@/components/calendar/GlobalStyles";
+import { TEnrolledCourse } from "@/types/course.types";
 
-export const UserCalendar = ({ isCalendarOpen, setIsCalendarOpen }) => {
+interface UserCalendarProps {
+  isCalendarOpen: boolean;
+  setIsCalendarOpen: (open: boolean) => void;
+}
+
+export const UserCalendar = ({
+  isCalendarOpen,
+  setIsCalendarOpen,
+}: UserCalendarProps) => {
   const calendarRef = useRef(null);
 
   const { data: myCourses = [] } = useMyCourses();
   // Filter only physical trainings
   const myPhysicalCourses = (myCourses || []).filter(
-    (course) => course.learning_mode === "PHYSICAL" && course.training_date,
+    (course: TEnrolledCourse) =>
+      course.learning_mode === "PHYSICAL" && course.training_date,
   );
   // Map to FullCalendar event format
-  const myEvents = myPhysicalCourses.map((course) => ({
+  const myEvents = myPhysicalCourses.map((course: TEnrolledCourse) => ({
     id: course.guid,
     title: course.title + (course.venue ? ` @ ${course.venue}` : ""),
-    start: new Date(course.training_date),
+    start: course.training_date ? new Date(course.training_date) : new Date(),
     allDay: true,
     extendedProps: {
       description: course.description,
@@ -77,7 +87,7 @@ export const UserCalendar = ({ isCalendarOpen, setIsCalendarOpen }) => {
               eventContent={(arg) => {
                 // Find the course for this event
                 const course = myPhysicalCourses.find(
-                  (c) => c.guid === arg.event.id,
+                  (c: TEnrolledCourse) => c.guid === arg.event.id,
                 );
                 if (!course) return null;
                 // @ts-ignore

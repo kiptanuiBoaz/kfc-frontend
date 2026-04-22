@@ -24,7 +24,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 
 import { apiClient } from "@/api/apiClient";
-import { TCourse } from "@/types/course.types";
+import { TCourse, TEnrolledCourse } from "@/types/course.types";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { useIsAuthenticated, useUser } from "@/hooks/useAuth";
 import { useMyCourses } from "@/hooks/useMyCourses";
@@ -54,7 +54,7 @@ export const CoursePreviewPage = () => {
   });
 
   const { data: myCourses = [] } = useMyCourses();
-  const isEnrolled = isCourseEnrolled(myCourses, courseGuid || "");
+  const isEnrolled = isCourseEnrolled(myCourses as TEnrolledCourse[], courseGuid || "");
   const isInstructor = user?.role?.name?.toLowerCase() === "instructor";
   const isAdmin = user?.role?.name?.toLowerCase() === "admin";
 
@@ -242,7 +242,7 @@ export const CoursePreviewPage = () => {
                 <Stack spacing={2} direction={"row"} alignItems="center">
                   <Calendar style={{ fontSize: "10px" }} />
                   <Typography variant="body2" color="text.secondary">
-                    Created: {new Date(course.created_at).toLocaleDateString()}
+                    Created: {course.created_at ? new Date(course.created_at).toLocaleDateString() : 'N/A'}
                   </Typography>
                   {course.learning_mode === "PHYSICAL" && course.venue && (
                     <>
@@ -528,7 +528,7 @@ export const CoursePreviewPage = () => {
                                       color: "primary.main",
                                     }}
                                   >
-                                    {topicIndex + 1}/{module.topics.length}
+                                    {topicIndex + 1}/{module.topics?.length || 0}
                                   </Box>
                                   <Box sx={{ flex: 1 }}>
                                     <Typography
