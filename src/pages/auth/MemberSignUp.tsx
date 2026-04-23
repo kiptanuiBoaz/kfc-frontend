@@ -27,6 +27,7 @@ const MemberSignUpPage: React.FC = () => {
 
   const [tab, setTab] = useState<"normal" | "kfc">("normal");
   const [memberId, setMemberId] = useState("");
+  const [email, setEmail] = useState("");
   const [memberSyncLoading, setMemberSyncLoading] = useState(false);
   const [memberSyncSuccess, setMemberSyncSuccess] = useState<string | null>(
     null,
@@ -47,10 +48,11 @@ const MemberSignUpPage: React.FC = () => {
         "/main/v1/organization/sync/",
         {
           member_id: memberId,
+          email,
         },
       );
-      if (res.status === "ok") {
-        setMemberData(res.data);
+      if (res?.status === "ok") {
+        setMemberData(res?.data);
         setMemberSyncSuccess(
           `A registration link will be sent to your email if your member number is valid. Please check your inbox.`,
         );
@@ -60,6 +62,7 @@ const MemberSignUpPage: React.FC = () => {
         );
       }
       setMemberId("");
+      setEmail("");
       setTab("normal");
     } catch (err: any) {
       setErrorMessage(
@@ -131,11 +134,21 @@ const MemberSignUpPage: React.FC = () => {
                     onChange={(e) => setMemberId(e.target.value)}
                     disabled={memberSyncLoading}
                   />
+                  <TextField
+                    label="Primary Email"
+                    name="email"
+                    type="email"
+                    required
+                    fullWidth
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={memberSyncLoading}
+                  />
                   <Button
                     type="submit"
                     variant="contained"
                     size="large"
-                    disabled={memberSyncLoading || !memberId}
+                    disabled={memberSyncLoading || !memberId || !email}
                   >
                     {memberSyncLoading
                       ? "Sending..."

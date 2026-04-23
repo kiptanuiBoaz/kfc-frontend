@@ -34,7 +34,7 @@ const UserSignUpPage: React.FC = () => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const orgParam = searchParams.get("org");
-
+  console.log("Organization parameter from URL:", orgParam);
   const navigate = useNavigate();
 
   const formik = useFormik({
@@ -60,11 +60,11 @@ const UserSignUpPage: React.FC = () => {
 
         resetForm();
         navigate(PATHS.LOGIN);
-      } catch (error) {
+      } catch (err: any) {
         const message =
-          error instanceof Error
-            ? error.message
-            : "An unexpected error occurred. Please try again.";
+          err?.response?.data?.message ||
+          err?.response?.data?.error ||
+          "An unexpected error occurred. Please try again.";
         setErrorMessage(message);
         setSuccessMessage(null);
       } finally {

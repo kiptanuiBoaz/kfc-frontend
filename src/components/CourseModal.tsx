@@ -70,18 +70,16 @@ export const CourseModal: React.FC<CourseModalProps> = ({
   } = useQuery<AuthUser[]>({
     queryKey: ["adminUsers"],
     queryFn: async () => {
-      const response = await apiClient.get<{ data: AuthUser[] }>("/main/v1/user/all/");
+      const response = await apiClient.get<{ data: AuthUser[] }>(
+        "/main/v1/user/all/",
+      );
       return response?.data || [];
     },
   });
 
   // Filter only instructors
   const instructorOptions = Array.isArray(users)
-    ? users.filter((u: AuthUser) =>
-        u.role && typeof u.role === "object"
-          ? u.role.name === "INSTRUCTOR"
-          : u.role === "INSTRUCTOR",
-      )
+    ? users.filter((u: AuthUser) => u.role?.name === "INSTRUCTOR")
     : [];
 
   useEffect(() => {
@@ -414,7 +412,8 @@ export const CourseModal: React.FC<CourseModalProps> = ({
                     placeholder="Add a tag"
                     error={Boolean(formik.touched.tags && formik.errors.tags)}
                     helperText={
-                      (formik.touched.tags && formik.errors.tags as string) || ""
+                      (formik.touched.tags && (formik.errors.tags as string)) ||
+                      ""
                     }
                   />
                 </Grid>

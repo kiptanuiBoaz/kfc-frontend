@@ -55,7 +55,7 @@ interface AuthState {
 export interface TRole {
     id: number,
     guid: string,
-    name: string,
+    name: "USER" | "ORG_ADMIN" | "ADMIN" | "INSTRUCTOR",
     description: string,
     permission_id: string[],
     created_at: string,
