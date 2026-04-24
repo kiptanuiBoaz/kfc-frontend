@@ -27,6 +27,15 @@ export interface AuthUser {
     is_first_time_login: boolean;
     created_at: string;
     bio: string | null;
+    organization: TOrganization | null;
+}
+
+export interface TOrganization {
+    guid: string;
+    org_name: string;
+    member_id: string;
+    address: string;
+    is_active: boolean;
 }
 
 export interface AuthTokens {
