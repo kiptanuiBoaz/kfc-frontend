@@ -1,14 +1,5 @@
 import { PATHS } from "@/navigation/paths";
-import {
-  House,
-  BookOpen,
-  Users,
-  Settings,
-  BarChart3,
-  FileText,
-  Calendar,
-  MessageSquare,
-} from "lucide-react";
+import { House, BookOpen, Users } from "lucide-react";
 import React from "react";
 
 export interface MenuItem {
