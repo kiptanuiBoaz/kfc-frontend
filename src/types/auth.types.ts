@@ -22,10 +22,11 @@ export interface AuthUser {
     first_name: string;
     last_name: string;
     phone_number: string;
-    role: TRole | null;
+    role: TRole;
     is_active: boolean;
     is_first_time_login: boolean;
     created_at: string;
+
     bio: string | null;
 }
 
