@@ -53,12 +53,23 @@ export const AdminDashboard: React.FC = () => {
     isError,
   } = useQuery<TCoursePrviewDetails[]>({
     queryKey: ["adminCourses"],
-    queryFn: () => apiClient.get<TCoursePrviewDetails[]>("/main/v1/courses/"),
+    queryFn: async () => {
+      const response = await apiClient.get<TCoursePrviewDetails[]>("/main/v1/courses/");
+      return response || [];
+    },
   });
   return (
-    <Stack spacing={4}>
+    <Stack spacing={4} sx={{ mt: 1 }}>
       <Box>
-        <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+        <Typography
+          variant="h5"
+          sx={{
+            mb: 3,
+            fontWeight: 800,
+            color: "text.primary",
+            letterSpacing: "-0.01em",
+          }}
+        >
           Platform Stats
         </Typography>
         <Grid container spacing={3}>
@@ -69,7 +80,6 @@ export const AdminDashboard: React.FC = () => {
           ))}
         </Grid>
       </Box>
-      
     </Stack>
   );
 };

@@ -22,5 +22,5 @@ export const isDashboardPage = (pathOrUrl: string): boolean => {
     // Normalize missing leading slash.
     if (!pathname.startsWith("/")) pathname = `/${pathname}`;
 
-    return pathname === "/dashboard" || pathname.startsWith("/dashboard/");
+    return pathname === "/dashboard" || pathname.startsWith("/dashboard/") || pathname.startsWith("/instructor/");
 };
