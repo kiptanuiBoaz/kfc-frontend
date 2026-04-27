@@ -84,11 +84,7 @@ export const orgMenus: MenuItem[] = [
     icon: <House />,
     path: PATHS.ORG_DASHBOARD,
   },
-  {
-    title: "Courses",
-    icon: <BookOpen />,
-    path: "/dashboard/org/courses",
-  },
+
   {
     title: "Users",
     icon: <Users />,

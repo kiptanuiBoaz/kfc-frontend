@@ -258,7 +258,9 @@ const ExtendedCourseCard: React.FC<ExtendedCourseCardProps> = ({
         <Box
           component="img"
           src={
-            course?.image ? course?.image : "/images/logos/horizontal_logo.png"
+            course?.image?.startsWith("https://")
+              ? `${course?.image}`
+              : "/images/logos/horizontal_logo.png"
           }
           alt={course.title}
         />

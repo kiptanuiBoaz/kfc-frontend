@@ -7,6 +7,7 @@ import Footer from "@/components/landing-page/Footer";
 import Notiflix from "notiflix";
 import { isDashboardPage } from "@/utils/isDashboardPage";
 import "../src/styles/index.css";
+import { isOrgRoute } from "@/utils/isOrgAdmin";
 
 // Helper function to render routes recursively
 const renderRoutes = (routes: any[]) => {
@@ -45,8 +46,20 @@ function App() {
 
   return (
     <Box>
-      {!isAuthRoute && !isDashboard && <Navbar />}
-      <Box sx={{ mt: location.pathname === "/" || isAuthRoute || isDashboard ? 0 : "80px" }} />
+      {!isAuthRoute && !isDashboard && !isOrgRoute(location.pathname) && (
+        <Navbar />
+      )}
+      <Box
+        sx={{
+          mt:
+            location.pathname === "/" ||
+            isAuthRoute ||
+            isDashboard ||
+            isOrgRoute(location.pathname)
+              ? 0
+              : "80px",
+        }}
+      />
       <Box
         component="main"
         sx={{
@@ -58,7 +71,9 @@ function App() {
         <Box sx={{ flexGrow: 1 }}>
           <Routes>{renderRoutes(routes)}</Routes>
         </Box>
-        {(!isDashboard || isAuthRoute) && <Footer />}
+        {(!isDashboard || isAuthRoute || isOrgRoute(location.pathname)) && (
+          <Footer />
+        )}
       </Box>
     </Box>
   );

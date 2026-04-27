@@ -30,7 +30,7 @@ import { useUser, useIsAuthenticated } from "@/hooks/useAuth";
 import { logout } from "@/redux/slices/authSlice";
 import { AppDispatch } from "@/redux/store";
 import { Notify } from "notiflix";
-import { UserProfileMenu } from "./UserProfileMenu";
+import { UserProfileDropdown } from "@/components/shared/UserProfileDropdown";
 import { CustomContainer } from "@/components/shared/CustomContainer";
 
 const Navbar: React.FC = () => {
@@ -40,10 +40,6 @@ const Navbar: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const [orgAnchorEl, setOrgAnchorEl] = React.useState<null | HTMLElement>(
-    null,
-  );
   const [isScrolled, setIsScrolled] = React.useState(false);
 
   const isAuthenticated = useIsAuthenticated();
@@ -66,6 +62,18 @@ const Navbar: React.FC = () => {
           scrollTo: true,
         }
       : undefined,
+  ];
+
+  const orgAdminNavItems = [
+    ...publicNavItems,
+    {
+      label: user?.organization?.org_name || "Organization",
+      variant: "text" as const,
+      to: PATHS.ORG_DASHBOARD.replace(
+        ":orgGuid",
+        user?.organization?.guid || "",
+      ),
+    },
   ];
   const authNavItems = [
     // ...publicNavItems,
@@ -120,13 +128,6 @@ const Navbar: React.FC = () => {
     setIsDrawerOpen(nextOpen);
   };
 
-  const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleProfileMenuClose = () => {
-    setAnchorEl(null);
-  };
   const studentNavItems = baseNavItems;
   const getMainNavItems = () => {
     let items: any[] = [];
@@ -134,6 +135,7 @@ const Navbar: React.FC = () => {
     else if (isAdmin) items = adminNavItems;
     else if (isInstructor) items = instructorNavItems;
     else if (isUser) items = studentNavItems;
+    else if (isOrgAdmin) items = orgAdminNavItems;
     return items.filter((item) => Boolean(item));
   };
 
@@ -143,15 +145,8 @@ const Navbar: React.FC = () => {
     else if (isAdmin) items = adminNavItems;
     else if (isInstructor) items = instructorNavItems;
     else if (isUser) items = studentNavItems;
+    else if (isOrgAdmin) items = orgAdminNavItems;
     return items.filter((item) => Boolean(item));
-  };
-
-  const handleOrgMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setOrgAnchorEl(event.currentTarget);
-  };
-
-  const handleOrgMenuClose = () => {
-    setOrgAnchorEl(null);
   };
 
   const handleSmoothScroll = (e: React.MouseEvent, to: string) => {
@@ -202,67 +197,12 @@ const Navbar: React.FC = () => {
               </Button>
             );
           })}
-
-          {/* Organization Menu */}
-          {user?.organization && (
-            <React.Fragment>
-              <Button
-                color="inherit"
-                variant="text"
-                onClick={handleOrgMenuOpen}
-                endIcon={<ExpandMoreIcon fontSize="small" />}
-              >
-                Organization
-              </Button>
-              <Menu
-                anchorEl={orgAnchorEl}
-                open={Boolean(orgAnchorEl)}
-                onClose={handleOrgMenuClose}
-                anchorOrigin={{
-                  vertical: "bottom",
-                  horizontal: "left",
-                }}
-                transformOrigin={{
-                  vertical: "top",
-                  horizontal: "left",
-                }}
-              >
-                <MenuItem
-                  onClick={() => {
-                    handleOrgMenuClose();
-                    navigate(PATHS.ORG_DASHBOARD);
-                  }}
-                >
-                  <ListItemIcon>
-                    <DashboardIcon fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText>Dashboard</ListItemText>
-                </MenuItem>
-                <MenuItem
-                  onClick={() => {
-                    handleOrgMenuClose();
-                    navigate(PATHS.ORG_USERS);
-                  }}
-                >
-                  <ListItemIcon>
-                    <AccountCircleIcon fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText>Users</ListItemText>
-                </MenuItem>
-              </Menu>
-            </React.Fragment>
-          )}
         </Stack>
       </Box>
 
       {/* Auth Section - Right Aligned */}
       {isAuthenticated ? (
-        <UserProfileMenu
-          anchorEl={anchorEl}
-          onClose={handleProfileMenuClose}
-          onOpen={handleProfileMenuOpen}
-          isScrolled={isScrolled}
-        />
+        <UserProfileDropdown isScrolled={isScrolled} />
       ) : (
         <Stack direction="row" spacing={2}>
           {authNavItems.map((item) => {
@@ -291,12 +231,7 @@ const Navbar: React.FC = () => {
       {/* Mobile Profile/Menu Button */}
       {isAuthenticated ? (
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <UserProfileMenu
-            anchorEl={anchorEl}
-            onClose={handleProfileMenuClose}
-            onOpen={handleProfileMenuOpen}
-            size="small"
-          />
+          <UserProfileDropdown size="small" />
           <IconButton
             edge="end"
             color="inherit"
