@@ -1,0 +1,1 @@
+export const isOrgRoute = (pathname: string) => /^\/org\/[^/]+(?:\/|$)/.test(pathname);

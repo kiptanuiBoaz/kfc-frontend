@@ -2,7 +2,7 @@ import React from "react";
 import { Box, Typography, Paper, Stack } from "@mui/material";
 import { useUser } from "@/hooks/useAuth";
 
-const BlankDashboardPage: React.FC<{ title: string }> = ({ title }) => {
+const Home: React.FC<{ title: string }> = () => {
   const user = useUser();
   const orgName = user?.organization?.org_name || "Organization";
 
@@ -18,7 +18,7 @@ const BlankDashboardPage: React.FC<{ title: string }> = ({ title }) => {
             letterSpacing: "-0.01em",
           }}
         >
-          {orgName} {title}
+          {orgName}
         </Typography>
         <Paper
           elevation={0}
@@ -32,7 +32,7 @@ const BlankDashboardPage: React.FC<{ title: string }> = ({ title }) => {
           }}
         >
           <Typography variant="h6" color="text.secondary" gutterBottom>
-            No {title.toLowerCase()} data available yet.
+            No data available yet.
           </Typography>
           <Typography variant="body2" color="text.secondary">
             Once details are fed for {orgName}, they will appear here.
@@ -43,4 +43,4 @@ const BlankDashboardPage: React.FC<{ title: string }> = ({ title }) => {
   );
 };
 
-export default BlankDashboardPage;
+export default Home;
