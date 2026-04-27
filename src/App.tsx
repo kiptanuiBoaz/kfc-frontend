@@ -22,6 +22,7 @@ const renderRoutes = (routes: any[]) => {
     return <Route key={route.path} path={route.path} element={route.element} />;
   });
 };
+//comment
 
 function App() {
   Notiflix.Notify.init({
