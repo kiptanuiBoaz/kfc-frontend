@@ -9,7 +9,6 @@ import { isDashboardPage } from "@/utils/isDashboardPage";
 import "../src/styles/index.css";
 import { isOrgRoute } from "@/utils/isOrgAdmin";
 
-// Helper function to render routes recursively
 const renderRoutes = (routes: any[]) => {
   return routes.map((route) => {
     if (route.children) {
@@ -30,7 +29,7 @@ function App() {
     distance: "10px",
     timeout: 3000,
   });
-  // Restore auth state on app initialization
+
   useAuthRestore();
 
   const location = useLocation();
