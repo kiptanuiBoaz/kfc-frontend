@@ -43,7 +43,7 @@ const AdminUsersPage: React.FC = () => {
     data: users = [],
     isLoading,
     isError,
-  } = useQuery<AuthUser[]>({
+  } = useQuery({
     queryKey: ["adminUsers"],
     queryFn: () => apiClient.get<AuthUser[]>("/main/v1/user/all/"),
   });
@@ -58,7 +58,7 @@ const AdminUsersPage: React.FC = () => {
     },
     onError: (error) => {
       Notify.failure(
-        error instanceof Error ? error.message : "Failed to create user"
+        error instanceof Error ? error.message : "Failed to create user",
       );
     },
   });
@@ -73,7 +73,7 @@ const AdminUsersPage: React.FC = () => {
     },
     onError: (error) => {
       Notify.failure(
-        error instanceof Error ? error.message : "Failed to update user"
+        error instanceof Error ? error.message : "Failed to update user",
       );
     },
   });
@@ -90,7 +90,7 @@ const AdminUsersPage: React.FC = () => {
     },
     onError: (error) => {
       Notify.failure(
-        error instanceof Error ? error.message : "Failed to delete user"
+        error instanceof Error ? error.message : "Failed to delete user",
       );
     },
   });
@@ -105,7 +105,7 @@ const AdminUsersPage: React.FC = () => {
     },
     onError: (error) => {
       Notify.failure(
-        error instanceof Error ? error.message : "Failed to update user status"
+        error instanceof Error ? error.message : "Failed to update user status",
       );
     },
   });
@@ -151,8 +151,8 @@ const AdminUsersPage: React.FC = () => {
     setDeleteDialogOpen(true);
   };
 
-  const renderRoleChip = (role: string | null) => {
-    const label = role ? role.toUpperCase() : "USER";
+  const renderRoleChip = (role: TRole) => {
+    const label = role ? role.name.toUpperCase() : "USER";
     const roleColors: Record<
       string,
       | "default"
@@ -250,15 +250,15 @@ const AdminUsersPage: React.FC = () => {
                     <TableCell>
                       <Stack direction="row" spacing={2} alignItems="center">
                         <Avatar
-                          src={user.image || undefined}
+                          src={user?.image || undefined}
                           sx={{ width: 40, height: 40 }}
                         >
-                          {user.first_name?.[0]?.toUpperCase() ||
-                            user.email?.[0]?.toUpperCase()}
+                          {user?.first_name?.[0]?.toUpperCase() ||
+                            user?.email?.[0]?.toUpperCase()}
                         </Avatar>
                         <Box>
                           <Typography fontWeight={600}>
-                            {user.first_name} {user.last_name}
+                            {user?.first_name} {user?.last_name}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
                             {user.email}
@@ -266,7 +266,7 @@ const AdminUsersPage: React.FC = () => {
                         </Box>
                       </Stack>
                     </TableCell>
-                    <TableCell>{renderRoleChip(user.role.name)}</TableCell>
+                    <TableCell>{renderRoleChip(user?.role)}</TableCell>
                     <TableCell>{renderStatusChip(user.is_active)}</TableCell>
                     <TableCell>{user.phone_number || "--"}</TableCell>
                     <TableCell>

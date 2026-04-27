@@ -3,13 +3,13 @@ import {
   AppBar,
   Box,
   Button,
-  Container,
   Divider,
   Drawer,
   IconButton,
   Link,
   ListItemIcon,
   ListItemText,
+  Menu,
   MenuItem,
   Stack,
   Toolbar,
@@ -25,9 +25,8 @@ import { useDispatch } from "react-redux";
 import { PATHS } from "@/navigation/paths";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DashboardIcon from "@mui/icons-material/Dashboard";
-import Menu, { MenuProps } from "@mui/material/Menu";
 import { isAuthUrl } from "@/utils/isAuth";
-import { useAuth, useUser, useIsAuthenticated } from "@/hooks/useAuth";
+import { useUser, useIsAuthenticated } from "@/hooks/useAuth";
 import { logout } from "@/redux/slices/authSlice";
 import { AppDispatch } from "@/redux/store";
 import { Notify } from "notiflix";
@@ -42,7 +41,9 @@ const Navbar: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const [orgAnchorEl, setOrgAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [orgAnchorEl, setOrgAnchorEl] = React.useState<null | HTMLElement>(
+    null,
+  );
   const [isScrolled, setIsScrolled] = React.useState(false);
 
   const isAuthenticated = useIsAuthenticated();
@@ -52,6 +53,8 @@ const Navbar: React.FC = () => {
   const isAdmin = user?.role?.name?.toLowerCase() === "admin";
   const isInstructor = user?.role?.name?.toLowerCase() === "instructor";
   const isUser = user?.role?.name?.toLowerCase() === "user";
+  const isOrgAdmin = user?.role?.name?.toLowerCase() === "org_admin";
+
   const publicNavItems = [
     { label: "Home", variant: "text" as const, to: PATHS.HOME },
     { label: "Course Catalog", variant: "text" as const, to: PATHS.COURSES },
@@ -171,7 +174,7 @@ const Navbar: React.FC = () => {
       {/* Navigation Links - Centered */}
       <Box sx={{ flex: 1, display: "flex", justifyContent: "center" }}>
         <Stack direction="row" spacing={3} sx={{ alignItems: "center" }}>
-          {getMainNavItems().map((item, index) => {
+          {getMainNavItems()?.map((item, index) => {
             // If scrollTo is set, use smooth scroll handler
             if (item?.scrollTo && item?.to) {
               return (
@@ -190,7 +193,7 @@ const Navbar: React.FC = () => {
               : {};
             return (
               <Button
-                key={item?.label + index}
+                key={item?.label || "" + index}
                 color="inherit"
                 variant="text"
                 {...linkProps}
@@ -331,22 +334,21 @@ const Navbar: React.FC = () => {
           </Typography>
           <Divider sx={{ mb: 2 }} />
           <Stack spacing={1.5}>
-            {getNavItems().map((item) => {
-              if (!item) return null;
-              const linkProps = item.to
+            {getNavItems()?.map((item, index) => {
+              const linkProps = item?.to
                 ? { component: RouterLink, to: item.to }
                 : {};
 
               return (
                 <Button
-                  key={item.label}
-                  color={item.variant === "contained" ? "primary" : "inherit"}
-                  variant={item.variant === "contained" ? "contained" : "text"}
+                  key={item?.label || "" + index}
+                  color={item?.variant === "contained" ? "primary" : "inherit"}
+                  variant={item?.variant === "contained" ? "contained" : "text"}
                   sx={{ justifyContent: "flex-start" }}
                   fullWidth
                   {...linkProps}
                 >
-                  {item.label}
+                  {item?.label}
                 </Button>
               );
             })}
