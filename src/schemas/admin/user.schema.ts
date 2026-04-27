@@ -27,7 +27,7 @@ export const UserSchema = Yup.object({
         .when(['password', '$isEdit'], {
             is: (password: string, isEdit: boolean) => password && !isEdit,
             then: (schema) => schema
-                .oneOf([Yup.ref("password"), null], "Passwords must match")
+                .oneOf([Yup.ref("password")], "Passwords must match")
                 .required("Please confirm your password"),
             otherwise: (schema) => schema.optional(),
         }),

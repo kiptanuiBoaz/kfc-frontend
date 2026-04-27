@@ -78,3 +78,20 @@ export const instructorMenus: MenuItem[] = [
   //   path: "/dashboard/instructor/settings",
   // },
 ];
+export const orgMenus: MenuItem[] = [
+  {
+    title: "Dashboard",
+    icon: <House />,
+    path: PATHS.ORG_DASHBOARD,
+  },
+  {
+    title: "Courses",
+    icon: <BookOpen />,
+    path: "/dashboard/org/courses",
+  },
+  {
+    title: "Users",
+    icon: <Users />,
+    path: PATHS.ORG_USERS,
+  },
+];

@@ -23,6 +23,9 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import { Link as RouterLink, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { PATHS } from "@/navigation/paths";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import Menu, { MenuProps } from "@mui/material/Menu";
 import { isAuthUrl } from "@/utils/isAuth";
 import { useAuth, useUser, useIsAuthenticated } from "@/hooks/useAuth";
 import { logout } from "@/redux/slices/authSlice";
@@ -39,6 +42,7 @@ const Navbar: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [orgAnchorEl, setOrgAnchorEl] = React.useState<null | HTMLElement>(null);
   const [isScrolled, setIsScrolled] = React.useState(false);
 
   const isAuthenticated = useIsAuthenticated();
@@ -124,17 +128,29 @@ const Navbar: React.FC = () => {
   };
   const studentNavItems = baseNavItems;
   const getMainNavItems = () => {
-    if (!isAuthenticated) return publicNavItems;
-    if (isAdmin) return adminNavItems;
-    if (isInstructor) return instructorNavItems;
-    if (isUser) return studentNavItems;
+    let items: any[] = [];
+    if (!isAuthenticated) items = publicNavItems;
+    else if (isAdmin) items = adminNavItems;
+    else if (isInstructor) items = instructorNavItems;
+    else if (isUser) items = studentNavItems;
+    return items.filter((item) => Boolean(item));
   };
 
   const getNavItems = () => {
-    if (!isAuthenticated) return [...publicNavItems, ...authNavItems];
-    if (isAdmin) return adminNavItems;
-    if (isInstructor) return instructorNavItems;
-    if (isUser) return studentNavItems;
+    let items: any[] = [];
+    if (!isAuthenticated) items = [...publicNavItems, ...authNavItems];
+    else if (isAdmin) items = adminNavItems;
+    else if (isInstructor) items = instructorNavItems;
+    else if (isUser) items = studentNavItems;
+    return items.filter((item) => Boolean(item));
+  };
+
+  const handleOrgMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setOrgAnchorEl(event.currentTarget);
+  };
+
+  const handleOrgMenuClose = () => {
+    setOrgAnchorEl(null);
   };
 
   const handleSmoothScroll = (e: React.MouseEvent, to: string) => {
@@ -185,6 +201,56 @@ const Navbar: React.FC = () => {
               </Button>
             );
           })}
+
+          {/* Organization Menu */}
+          {user?.organization && (
+            <React.Fragment>
+              <Button
+                color="inherit"
+                variant="text"
+                onClick={handleOrgMenuOpen}
+                endIcon={<ExpandMoreIcon fontSize="small" />}
+              >
+                Organization
+              </Button>
+              <Menu
+                anchorEl={orgAnchorEl}
+                open={Boolean(orgAnchorEl)}
+                onClose={handleOrgMenuClose}
+                anchorOrigin={{
+                  vertical: "bottom",
+                  horizontal: "left",
+                }}
+                transformOrigin={{
+                  vertical: "top",
+                  horizontal: "left",
+                }}
+              >
+                <MenuItem
+                  onClick={() => {
+                    handleOrgMenuClose();
+                    navigate(PATHS.ORG_DASHBOARD);
+                  }}
+                >
+                  <ListItemIcon>
+                    <DashboardIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Dashboard</ListItemText>
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    handleOrgMenuClose();
+                    navigate(PATHS.ORG_USERS);
+                  }}
+                >
+                  <ListItemIcon>
+                    <AccountCircleIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Users</ListItemText>
+                </MenuItem>
+              </Menu>
+            </React.Fragment>
+          )}
         </Stack>
       </Box>
 
@@ -267,8 +333,9 @@ const Navbar: React.FC = () => {
           </Typography>
           <Divider sx={{ mb: 2 }} />
           <Stack spacing={1.5}>
-            {getNavItems()?.map((item, index) => {
-              const linkProps = item?.to
+            {getNavItems().map((item, index) => {
+              if (!item) return null;
+              const linkProps = item.to
                 ? { component: RouterLink, to: item.to }
                 : {};
 
