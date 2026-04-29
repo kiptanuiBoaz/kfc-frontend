@@ -1,14 +1,5 @@
 import { PATHS } from "@/navigation/paths";
-import {
-  House,
-  BookOpen,
-  Users,
-  Settings,
-  BarChart3,
-  FileText,
-  Calendar,
-  MessageSquare,
-} from "lucide-react";
+import { House, BookOpen, Users } from "lucide-react";
 import React from "react";
 
 export interface MenuItem {
@@ -86,4 +77,17 @@ export const instructorMenus: MenuItem[] = [
   //   icon: <Settings />,
   //   path: "/dashboard/instructor/settings",
   // },
+];
+export const orgMenus: MenuItem[] = [
+  {
+    title: "Dashboard",
+    icon: <House />,
+    path: PATHS.ORG_DASHBOARD,
+  },
+
+  {
+    title: "Users",
+    icon: <Users />,
+    path: PATHS.ORG_USERS,
+  },
 ];

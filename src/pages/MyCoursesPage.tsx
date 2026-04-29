@@ -15,6 +15,7 @@ import { useMyCourses } from "@/hooks/useMyCourses";
 import LoadingPage from "@/components/shared/LoadingPage";
 import ErrorPage from "@/pages/errors/ErrorPage";
 import { CustomContainer } from "@/components/shared/CustomContainer";
+import { categories as categoryList } from "@/lib/categories";
 
 const defaultOptionValue = "all";
 
@@ -22,7 +23,7 @@ type FilterState = {
   search: string;
   learningMode: string;
   level: string;
-  instructor: string;
+  category: string;
 };
 
 const MyCoursesPage = () => {
@@ -32,14 +33,14 @@ const MyCoursesPage = () => {
     search: "",
     learningMode: defaultOptionValue,
     level: defaultOptionValue,
-    instructor: defaultOptionValue,
+    category: defaultOptionValue,
   });
 
   const learningModes = React.useMemo(
     () => [
       { value: defaultOptionValue, label: "All Modes" },
       ...Array.from(new Set(courses.map((course) => course.learning_mode)))
-        .filter(Boolean)
+        .filter((mode): mode is string => Boolean(mode))
         .map((mode) => ({
           value: mode,
           label: mode.charAt(0).toUpperCase() + mode.slice(1),
@@ -52,20 +53,18 @@ const MyCoursesPage = () => {
     () => [
       { value: defaultOptionValue, label: "All Levels" },
       ...Array.from(new Set(courses.map((course) => course.expertise_level)))
-        .filter(Boolean)
+        .filter((level): level is NonNullable<typeof level> => Boolean(level))
         .map((level) => ({ value: level, label: level })),
     ],
     [courses],
   );
 
-  const instructors = React.useMemo(
+  const schoolOptions = React.useMemo(
     () => [
-      { value: defaultOptionValue, label: "All Instructors" },
-      ...Array.from(new Set(courses.map((course) => course.instructor?.name)))
-        .filter((name) => name.length > 0)
-        .map((name) => ({ value: name, label: name })),
+      { value: defaultOptionValue, label: "All Schools" },
+      ...categoryList.map((category) => ({ value: category, label: category })),
     ],
-    [courses],
+    [],
   );
 
   const filteredCourses = React.useMemo(() => {
@@ -91,15 +90,15 @@ const MyCoursesPage = () => {
         filters.level === defaultOptionValue ||
         course.expertise_level === filters.level;
 
-      const matchesInstructor =
-        filters.instructor === defaultOptionValue ||
-        instructorName === filters.instructor;
+      const matchesCategory =
+        filters.category === defaultOptionValue ||
+        course.category === filters.category;
 
       return (
         matchesSearch &&
         matchesLearningMode &&
         matchesLevel &&
-        matchesInstructor
+        matchesCategory
       );
     });
   }, [courses, filters]);
@@ -113,7 +112,7 @@ const MyCoursesPage = () => {
       search: "",
       learningMode: defaultOptionValue,
       level: defaultOptionValue,
-      instructor: defaultOptionValue,
+      category: defaultOptionValue,
     });
   };
 
@@ -182,7 +181,7 @@ const MyCoursesPage = () => {
                 }
                 SelectProps={{
                   displayEmpty: true,
-                  renderValue: (value) =>
+                  renderValue: (value: unknown) =>
                     learningModes.find((option) => option.value === value)
                       ?.label ?? "All Modes",
                 }}
@@ -204,7 +203,7 @@ const MyCoursesPage = () => {
                 }
                 SelectProps={{
                   displayEmpty: true,
-                  renderValue: (value) =>
+                  renderValue: (value: unknown) =>
                     levels.find((option) => option.value === value)?.label ??
                     "All Levels",
                 }}
@@ -220,18 +219,18 @@ const MyCoursesPage = () => {
               <TextField
                 fullWidth
                 select
-                value={filters.instructor}
+                value={filters.category}
                 onChange={(event) =>
-                  handleFilterChange("instructor", event.target.value)
+                  handleFilterChange("category", event.target.value)
                 }
                 SelectProps={{
                   displayEmpty: true,
-                  renderValue: (value) =>
-                    instructors.find((option) => option.value === value)
-                      ?.label ?? "All Instructors",
+                  renderValue: (value: unknown) =>
+                    schoolOptions.find((option) => option.value === value)
+                      ?.label ?? "All Schools",
                 }}
               >
-                {instructors.map((option) => (
+                {schoolOptions.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
                     {option.label}
                   </MenuItem>

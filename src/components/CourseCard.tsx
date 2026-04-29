@@ -196,8 +196,8 @@ const CourseCard: React.FC<CourseCardProps> = ({
         <Box
           component="img"
           src={
-            course?.image
-              ? `${MEDIA_BASE_URL}${course.image}`
+            image?.startsWith("https://")
+              ? `${image}`
               : "/images/logos/horizontal_logo.png"
           }
           alt={title}

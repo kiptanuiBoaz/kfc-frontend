@@ -3,13 +3,13 @@ import {
   AppBar,
   Box,
   Button,
-  Container,
   Divider,
   Drawer,
   IconButton,
   Link,
   ListItemIcon,
   ListItemText,
+  Menu,
   MenuItem,
   Stack,
   Toolbar,
@@ -23,12 +23,14 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import { Link as RouterLink, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { PATHS } from "@/navigation/paths";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import DashboardIcon from "@mui/icons-material/Dashboard";
 import { isAuthUrl } from "@/utils/isAuth";
-import { useAuth, useUser, useIsAuthenticated } from "@/hooks/useAuth";
+import { useUser, useIsAuthenticated } from "@/hooks/useAuth";
 import { logout } from "@/redux/slices/authSlice";
 import { AppDispatch } from "@/redux/store";
 import { Notify } from "notiflix";
-import { UserProfileMenu } from "./UserProfileMenu";
+import { UserProfileDropdown } from "@/components/shared/UserProfileDropdown";
 import { CustomContainer } from "@/components/shared/CustomContainer";
 
 const Navbar: React.FC = () => {
@@ -38,7 +40,6 @@ const Navbar: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [isScrolled, setIsScrolled] = React.useState(false);
 
   const isAuthenticated = useIsAuthenticated();
@@ -48,6 +49,8 @@ const Navbar: React.FC = () => {
   const isAdmin = user?.role?.name?.toLowerCase() === "admin";
   const isInstructor = user?.role?.name?.toLowerCase() === "instructor";
   const isUser = user?.role?.name?.toLowerCase() === "user";
+  const isOrgAdmin = user?.role?.name?.toLowerCase() === "org_admin";
+
   const publicNavItems = [
     { label: "Home", variant: "text" as const, to: PATHS.HOME },
     { label: "Course Catalog", variant: "text" as const, to: PATHS.COURSES },
@@ -60,10 +63,22 @@ const Navbar: React.FC = () => {
         }
       : undefined,
   ];
+
+  const orgAdminNavItems = [
+    ...publicNavItems,
+    {
+      label: user?.organization?.org_name || "Organization",
+      variant: "text" as const,
+      to: PATHS.ORG_DASHBOARD.replace(
+        ":orgGuid",
+        user?.organization?.guid || "",
+      ),
+    },
+  ];
   const authNavItems = [
     // ...publicNavItems,
     { label: "Login", variant: "text" as const, to: PATHS.LOGIN },
-    { label: "Sign Up", variant: "contained" as const, to: PATHS.SIGN_UP },
+    { label: "Sign Up", variant: "contained" as const, to: PATHS.USER_SIGN_UP },
   ];
 
   const baseNavItems = [
@@ -113,26 +128,25 @@ const Navbar: React.FC = () => {
     setIsDrawerOpen(nextOpen);
   };
 
-  const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleProfileMenuClose = () => {
-    setAnchorEl(null);
-  };
   const studentNavItems = baseNavItems;
   const getMainNavItems = () => {
-    if (!isAuthenticated) return publicNavItems;
-    if (isAdmin) return adminNavItems;
-    if (isInstructor) return instructorNavItems;
-    if (isUser) return studentNavItems;
+    let items: any[] = [];
+    if (!isAuthenticated) items = publicNavItems;
+    else if (isAdmin) items = adminNavItems;
+    else if (isInstructor) items = instructorNavItems;
+    else if (isUser) items = studentNavItems;
+    else if (isOrgAdmin) items = orgAdminNavItems;
+    return items.filter((item) => Boolean(item));
   };
 
   const getNavItems = () => {
-    if (!isAuthenticated) return [...publicNavItems, ...authNavItems];
-    if (isAdmin) return adminNavItems;
-    if (isInstructor) return instructorNavItems;
-    if (isUser) return studentNavItems;
+    let items: any[] = [];
+    if (!isAuthenticated) items = [...publicNavItems, ...authNavItems];
+    else if (isAdmin) items = adminNavItems;
+    else if (isInstructor) items = instructorNavItems;
+    else if (isUser) items = studentNavItems;
+    else if (isOrgAdmin) items = orgAdminNavItems;
+    return items.filter((item) => Boolean(item));
   };
 
   const handleSmoothScroll = (e: React.MouseEvent, to: string) => {
@@ -155,7 +169,7 @@ const Navbar: React.FC = () => {
       {/* Navigation Links - Centered */}
       <Box sx={{ flex: 1, display: "flex", justifyContent: "center" }}>
         <Stack direction="row" spacing={3} sx={{ alignItems: "center" }}>
-          {getMainNavItems().map((item, index) => {
+          {getMainNavItems()?.map((item, index) => {
             // If scrollTo is set, use smooth scroll handler
             if (item?.scrollTo && item?.to) {
               return (
@@ -174,7 +188,7 @@ const Navbar: React.FC = () => {
               : {};
             return (
               <Button
-                key={item?.label + index}
+                key={item?.label || "" + index}
                 color="inherit"
                 variant="text"
                 {...linkProps}
@@ -188,12 +202,7 @@ const Navbar: React.FC = () => {
 
       {/* Auth Section - Right Aligned */}
       {isAuthenticated ? (
-        <UserProfileMenu
-          anchorEl={anchorEl}
-          onClose={handleProfileMenuClose}
-          onOpen={handleProfileMenuOpen}
-          isScrolled={isScrolled}
-        />
+        <UserProfileDropdown isScrolled={isScrolled} />
       ) : (
         <Stack direction="row" spacing={2}>
           {authNavItems.map((item) => {
@@ -222,12 +231,7 @@ const Navbar: React.FC = () => {
       {/* Mobile Profile/Menu Button */}
       {isAuthenticated ? (
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <UserProfileMenu
-            anchorEl={anchorEl}
-            onClose={handleProfileMenuClose}
-            onOpen={handleProfileMenuOpen}
-            size="small"
-          />
+          <UserProfileDropdown size="small" />
           <IconButton
             edge="end"
             color="inherit"
@@ -265,21 +269,21 @@ const Navbar: React.FC = () => {
           </Typography>
           <Divider sx={{ mb: 2 }} />
           <Stack spacing={1.5}>
-            {getNavItems().map((item) => {
-              const linkProps = item.to
+            {getNavItems()?.map((item, index) => {
+              const linkProps = item?.to
                 ? { component: RouterLink, to: item.to }
                 : {};
 
               return (
                 <Button
-                  key={item.label}
-                  color={item.variant === "contained" ? "primary" : "inherit"}
-                  variant={item.variant === "contained" ? "contained" : "text"}
+                  key={item?.label || "" + index}
+                  color={item?.variant === "contained" ? "primary" : "inherit"}
+                  variant={item?.variant === "contained" ? "contained" : "text"}
                   sx={{ justifyContent: "flex-start" }}
                   fullWidth
                   {...linkProps}
                 >
-                  {item.label}
+                  {item?.label}
                 </Button>
               );
             })}

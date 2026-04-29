@@ -21,12 +21,11 @@ import {
   IconButton,
   Stack,
 } from "@mui/material";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import LogoutIcon from "@mui/icons-material/Logout";
-import LibraryBooksIcon from "@mui/icons-material/LibraryBooks";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ApartmentIcon from "@mui/icons-material/Apartment";
 import { useNavigate } from "react-router-dom";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 
@@ -41,7 +40,7 @@ import { MuiTelInput } from "mui-tel-input";
 import { useFormik } from "formik";
 import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/api/apiClient";
-import { AuthUser, TImageUpdateRes } from "@/types/auth.types";
+import { TImageUpdateRes } from "@/types/auth.types";
 import {
   ProfileFormValues,
   profileInitialValues,
@@ -80,8 +79,10 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
   const isAdmin = user?.role?.name?.toLowerCase() === "admin";
   const isInstructor = user?.role?.name?.toLowerCase() === "instructor";
   const isUser = user?.role?.name?.toLowerCase() === "user";
-  console.log("MEDIA BASE URL:", MEDIA_BASE_URL);
-  console.log("User Image:", user?.image);
+  const isOrgAdmin = user?.role?.name?.toLowerCase() === "org_admin";
+  const avatarSize = size === "small" ? 24 : 32;
+  const chipHeight = size === "small" ? 32 : 40;
+  const organizationName = user?.organization?.org_name || "Organization";
 
   const profileMutation = useMutation({
     mutationFn: async (values: ProfileFormValues) => {
@@ -211,9 +212,34 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
     navigate(PATHS.ADMIN_DASHBOARD);
   };
 
+  const handleOrgDashboard = () => {
+    onClose();
+    navigate(
+      PATHS.ORG_DASHBOARD.replace(":orgGuid", user?.organization?.guid || ""),
+    );
+  };
+
   const getDisplayName = () => {
     if (!user) return "";
     return `${user.first_name} ${user.last_name}`.trim() || user.email;
+  };
+
+  const getChipLabel = () => {
+    if (isOrgAdmin) {
+      return organizationName;
+    }
+
+    return getDisplayName();
+  };
+
+  const renderAvatarContent = () => {
+    if (isOrgAdmin) {
+      return <ApartmentIcon fontSize={size === "small" ? "small" : "medium"} />;
+    }
+
+    return (
+      user?.first_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase()
+    );
   };
 
   return (
@@ -229,24 +255,28 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
         </IconButton>
       )}
       <Chip
+        size={size}
         avatar={
           <Avatar
-            src={user?.image ? `${MEDIA_BASE_URL}${user.image}` : undefined}
+            src={
+              !isOrgAdmin && user?.image
+                ? `${MEDIA_BASE_URL}${user.image}`
+                : undefined
+            }
             sx={{
-              width: size === "small" ? 24 : 32,
-              height: size === "small" ? 24 : 32,
+              width: avatarSize,
+              height: avatarSize,
             }}
           >
-            {user?.first_name?.[0]?.toUpperCase() ||
-              user?.email?.[0]?.toUpperCase()}
+            {renderAvatarContent()}
           </Avatar>
         }
-        label={getDisplayName()}
+        label={getChipLabel()}
         deleteIcon={<ExpandMoreIcon />}
         onDelete={onOpen}
         onClick={onOpen}
         sx={{
-          height: size === "small" ? 32 : 40,
+          height: chipHeight,
           borderRadius: 5,
           cursor: "pointer",
           "& .MuiChip-deleteIcon": {
@@ -275,14 +305,19 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
         <MenuItem onClick={handleViewProfile}>
           <ListItemIcon>
             <Avatar
-              src={user?.image || undefined}
-              //   sx={{ width: 24, height: 24 }}
+              src={
+                !isOrgAdmin && user?.image
+                  ? `${MEDIA_BASE_URL}${user.image}`
+                  : undefined
+              }
             >
-              {user?.first_name?.[0]?.toUpperCase() ||
-                user?.email?.[0]?.toUpperCase()}
+              {renderAvatarContent()}
             </Avatar>
           </ListItemIcon>
-          <ListItemText primary={getDisplayName()} secondary={user?.email} />
+          <ListItemText
+            primary={isOrgAdmin ? organizationName : getDisplayName()}
+            secondary={isOrgAdmin ? `Org Admin • ${user?.email}` : user?.email}
+          />
         </MenuItem>
         {isInstructor && (
           <MenuItem onClick={handleDashboard}>
@@ -343,6 +378,7 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
             <ListItemText>Admin Dashboard</ListItemText>
           </MenuItem>
         )}
+
         <Divider />
         <MenuItem onClick={handleLogout}>
           <ListItemIcon>
@@ -373,12 +409,17 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
               <Box sx={{ position: "relative" }}>
                 <Avatar
                   src={
-                    user?.image ? `${MEDIA_BASE_URL}${user.image}` : undefined
+                    !isOrgAdmin && user?.image
+                      ? `${MEDIA_BASE_URL}${user.image}`
+                      : undefined
                   }
                   sx={{ width: 96, height: 96, boxShadow: 2 }}
                 >
-                  {user?.first_name?.[0]?.toUpperCase() ||
-                    user?.email?.[0]?.toUpperCase()}
+                  {isOrgAdmin ? (
+                    <ApartmentIcon fontSize="large" />
+                  ) : (
+                    renderAvatarContent()
+                  )}
                 </Avatar>
                 <IconButton
                   size="small"

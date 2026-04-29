@@ -21,4 +21,6 @@ export const PATHS = {
     TAKE_COURSE_PAGE: '/courses/:courseGuid/learn',
     TAKE_QUIZ_PAGE: '/modules/:moduleGuid/quizzes/:quizGuid',
     ORG_REGISTRATION: '/register',
+    ORG_DASHBOARD: '/org/:orgGuid/',
+    ORG_USERS: '/org/:orgGuid/users',
 };

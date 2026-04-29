@@ -15,19 +15,118 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import SchoolOutlinedIcon from "@mui/icons-material/SchoolOutlined";
 
+const mockCourses: TCourse[] = [
+  {
+    id: 1,
+    guid: "course-1",
+    title: "Production & Farm Operations",
+    description: "Master the essentials of modern farm management and sustainable production practices.",
+    tags: ["Agriculture", "Production"],
+    expertise_level: "Beginner",
+    prerequisites: [],
+    objectives: ["Understand soil health", "Learn irrigation techniques"],
+    isPaid: true,
+    amount: "5000",
+    currency: "KES",
+    isFeatured: true,
+    status: "PUBLISHED",
+    category: "Production & Farm Operations",
+    instructor: 1,
+    instructor_name: "Dr. Jane Smith",
+    image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&q=80&w=800",
+    instructor_details: {
+      guid: "inst-1",
+      email: "jane@example.com",
+      first_name: "Jane",
+      last_name: "Smith",
+      image: "https://i.pravatar.cc/150?u=jane"
+    },
+    created_by: null,
+    updated_by: null,
+    deleted_at: null,
+    deleted_by: null
+  },
+  {
+    id: 2,
+    guid: "course-2",
+    title: "Post-Harvest & Logistics",
+    description: "Optimize your supply chain and reduce waste with advanced post-harvest handling.",
+    tags: ["Logistics", "Quality"],
+    expertise_level: "Intermediate",
+    prerequisites: ["Course 1"],
+    objectives: ["Cold chain management", "Export standards"],
+    isPaid: true,
+    amount: "7500",
+    currency: "KES",
+    isFeatured: true,
+    status: "PUBLISHED",
+    category: "Post-Harvest, Quality & Logistics",
+    instructor: 2,
+    instructor_name: "John Doe",
+    image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80&w=800",
+    instructor_details: {
+      guid: "inst-2",
+      email: "john@example.com",
+      first_name: "John",
+      last_name: "Doe",
+      image: "https://i.pravatar.cc/150?u=john"
+    },
+    created_by: null,
+    updated_by: null,
+    deleted_at: null,
+    deleted_by: null
+  },
+  {
+    id: 3,
+    guid: "course-3",
+    title: "Compliance & ESG Standards",
+    description: "Ensure your operations meet international export readiness and sustainability criteria.",
+    tags: ["Compliance", "ESG"],
+    expertise_level: "Advanced",
+    prerequisites: [],
+    objectives: ["Global GAP standards", "Environmental impact assessment"],
+    isPaid: false,
+    amount: null,
+    currency: "KES",
+    isFeatured: true,
+    status: "PUBLISHED",
+    category: "Compliance & ESG (Export Readiness)",
+    instructor: 3,
+    instructor_name: "Sarah Williams",
+    image: "https://images.unsplash.com/photo-1454165833767-027ffea7025c?auto=format&fit=crop&q=80&w=800",
+    instructor_details: {
+      guid: "inst-3",
+      email: "sarah@example.com",
+      first_name: "Sarah",
+      last_name: "Williams",
+      image: "https://i.pravatar.cc/150?u=sarah"
+    },
+    created_by: null,
+    updated_by: null,
+    deleted_at: null,
+    deleted_by: null
+  }
+];
+
 const FeaturedCourses = () => {
   const navigate = useNavigate();
   const {
     data: courses = [],
     isLoading,
-    isError,
   } = useQuery<TCourse[]>({
-    queryKey: ["adminCourses"],
+    queryKey: ["public-featured-courses"],
     queryFn: async () => {
-      const response = await apiClient.get<TCourse[]>("/main/v1/public/featured-courses");
-      return response || [];
+      try {
+        const response = await apiClient.get<TCourse[]>("/main/v1/public/featured-courses/");
+        return response || mockCourses;
+      } catch (error) {
+        console.error("API failed, using mock data", error);
+        return mockCourses;
+      }
     },
+    retry: 1,
   });
+
   if (isLoading) {
     return (
       <CustomContainer>
@@ -134,8 +233,8 @@ const FeaturedCourses = () => {
           Our Featured Courses
         </Typography>
         <Typography textAlign={"center"} variant="body1" color="text.secondary">
-          Discover popular corses designed to address critical needs and latest
-          trentds in fresh produce industry.
+          Discover popular courses designed to address critical needs and latest
+          trends in fresh produce industry.
         </Typography>
 
         <Grid container spacing={4} sx={{ mt: 2 }}>
