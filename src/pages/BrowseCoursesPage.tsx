@@ -2,8 +2,6 @@ import React from "react";
 import {
   Box,
   Button,
-  CircularProgress,
-  Container,
   Grid,
   InputAdornment,
   MenuItem,
@@ -89,9 +87,9 @@ const BrowseCoursesPage: React.FC = () => {
   const levels = React.useMemo(
     () => [
       { value: defaultOptionValue, label: "All Levels" },
-      ...Array.from(
-        new Set(courses.map((course) => course.expertise_level)),
-      ).filter((level): level is NonNullable<typeof level> => Boolean(level)).map((level) => ({ value: level, label: level })),
+      ...Array.from(new Set(courses.map((course) => course.expertise_level)))
+        .filter((level): level is NonNullable<typeof level> => Boolean(level))
+        .map((level) => ({ value: level, label: level })),
     ],
     [courses],
   );
@@ -196,8 +194,8 @@ const BrowseCoursesPage: React.FC = () => {
             color="text.secondary"
             sx={{ fontSize: { xs: "1rem", sm: "1.1rem" } }}
           >
-            Filter by school, level, or mode to find the perfect course
-            for your learning goals.
+            Filter by school, level, or mode to find the perfect course for your
+            learning goals.
           </Typography>
         </Stack>
 

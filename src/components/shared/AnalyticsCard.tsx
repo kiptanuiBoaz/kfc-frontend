@@ -34,21 +34,22 @@ export const AnalyticsCard: React.FC<AnalyticsCardProps> = ({
 
   return (
     <Card
-      elevation={2}
+      elevation={0}
       sx={{
         height: "100%",
-        borderRadius: 3,
-        background: alpha(theme.palette[color].main, 0.05),
-        border: `1px solid ${alpha(theme.palette[color].main, 0.15)}`,
-        transition: "transform 0.2s ease, box-shadow 0.2s ease",
+        borderRadius: 4,
+        background: alpha(theme.palette[color].main, 0.04),
+        border: `1px solid ${alpha(theme.palette[color].main, 0.1)}`,
+        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
         "&:hover": {
-          transform: "translateY(-2px)",
-          boxShadow: 4,
+          transform: "translateY(-4px)",
+          boxShadow: `0 12px 24px -8px ${alpha(theme.palette[color].main, 0.15)}`,
+          background: alpha(theme.palette[color].main, 0.08),
         },
       }}
     >
       <CardContent sx={{ p: 3 }}>
-        <Stack spacing={2}>
+        <Stack spacing={2.5}>
           <Box
             sx={{
               display: "flex",
@@ -58,41 +59,77 @@ export const AnalyticsCard: React.FC<AnalyticsCardProps> = ({
           >
             <Box
               sx={{
-                p: 1.5,
+                p: 1.25,
                 borderRadius: 2,
-                backgroundColor: alpha(theme.palette[color].main, 0.1),
+                backgroundColor: alpha(theme.palette[color].main, 0.12),
                 color: theme.palette[color].main,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              {icon}
+              {React.cloneElement(icon as React.ReactElement<any>, {
+                size: 22,
+              })}
             </Box>
             {trend && (
-              <Chip
-                label={trend.value}
-                size="small"
-                color={trend.isPositive ? "success" : "error"}
-                variant="outlined"
-                sx={{ fontWeight: 600 }}
-              />
+              <Box
+                sx={{
+                  px: 1.5,
+                  py: 0.5,
+                  borderRadius: 10,
+                  backgroundColor: alpha(
+                    trend.isPositive
+                      ? theme.palette.success.main
+                      : theme.palette.error.main,
+                    0.12
+                  ),
+                  color: trend.isPositive
+                    ? theme.palette.success.dark
+                    : theme.palette.error.dark,
+                  fontSize: "0.75rem",
+                  fontWeight: 700,
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                {trend.value}
+              </Box>
             )}
           </Box>
           <Box>
             <Typography
-              variant="h4"
-              component="div"
+              variant="h3"
               sx={{
-                fontWeight: 700,
-                color: theme.palette[color].main,
+                fontWeight: 800,
+                color: theme.palette[color].dark,
                 mb: 0.5,
+                fontSize: "1.75rem",
+                letterSpacing: "-0.02em",
               }}
             >
               {value}
             </Typography>
-            <Typography variant="h6" color="text.primary" sx={{ mb: 0.5 }}>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 700,
+                color: theme.palette.text.primary,
+                mb: 0.25,
+                fontSize: "1rem",
+              }}
+            >
               {title}
             </Typography>
             {subtitle && (
-              <Typography variant="body2" color="text.secondary">
+              <Typography
+                variant="body2"
+                sx={{
+                  color: theme.palette.text.secondary,
+                  fontWeight: 500,
+                  opacity: 0.8,
+                }}
+              >
                 {subtitle}
               </Typography>
             )}

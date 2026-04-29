@@ -1,7 +1,6 @@
 import React from "react";
 import {
   AppBar,
-  Avatar,
   Box,
   Button,
   Divider,
@@ -23,6 +22,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { PATHS } from "@/navigation/paths";
 import { useUser } from "@/hooks/useAuth";
 import { MenuItem } from "@/navigation/dashboard-menus";
+import { UserProfileDropdown } from "@/components/shared/UserProfileDropdown";
 
 const drawerWidth = 260;
 
@@ -52,6 +52,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const navigate = useNavigate();
   const user = useUser();
   const [mobileOpen, setMobileOpen] = React.useState(false);
+
+  const isAdminRoute = location.pathname.startsWith(
+    PATHS.ADMIN_DASHBOARD.replace("/*", ""),
+  );
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -161,13 +165,17 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
       {/* Main Content */}
       <Box component="main" sx={{ flexGrow: 1, minHeight: "100vh" }}>
-        {/* <AppBar
+        <AppBar
           position="sticky"
           color="inherit"
           elevation={0}
-          sx={{ borderBottom: `1px solid ${theme.palette.divider}` }}
+          sx={{
+            backgroundColor: "background.paper",
+            borderBottom: `1px solid ${theme.palette.divider}`,
+            zIndex: theme.zIndex.drawer + 1,
+          }}
         >
-          <Toolbar sx={{ px: 3 }}>
+          <Toolbar sx={{ px: { xs: 2, md: 4 }, height: 70 }}>
             <IconButton
               color="inherit"
               edge="start"
@@ -176,19 +184,50 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             >
               <MenuIcon />
             </IconButton>
-            <Box sx={{ flexGrow: 1 }}>
-              <Typography variant="h5" fontWeight={700}>
-                {title}
-              </Typography>
-              {subtitle && (
-                <Typography variant="body2" color="text.secondary">
-                  {subtitle}
+
+            {/* Desktop Navigation Links */}
+            <Box
+              sx={{
+                flexGrow: 1,
+                display: { xs: "none", md: "flex" },
+                justifyContent: "center",
+                gap: 4,
+              }}
+            >
+              {[
+                { label: "Home", path: PATHS.HOME },
+                { label: "Course Catalog", path: PATHS.COURSES },
+                {
+                  label: isAdminRoute
+                    ? user?.organization?.org_name || "Admin Dashboard"
+                    : "Dashboard",
+                  path: location.pathname,
+                },
+              ].map((link) => (
+                <Typography
+                  key={link.label}
+                  component={Link}
+                  href={link.path}
+                  sx={{
+                    color:
+                      location.pathname === link.path
+                        ? "text.primary"
+                        : "text.secondary",
+                    textDecoration: "none",
+                    fontWeight: 600,
+                    fontSize: "0.95rem",
+                    transition: "color 0.2s",
+                    "&:hover": { color: "primary.main" },
+                  }}
+                >
+                  {link.label}
                 </Typography>
-              )}
+              ))}
             </Box>
-            {actions}
+
+            <UserProfileDropdown />
           </Toolbar>
-        </AppBar> */}
+        </AppBar>
         <Box sx={{ p: { xs: 2, md: 4 } }}>{renderContent()}</Box>
       </Box>
     </Box>

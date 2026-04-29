@@ -11,7 +11,7 @@ export const isAuthEndPoint = (location: string) => {
 
 export const isAuthUrl = (url: string) => {
     return url.includes(PATHS.LOGIN) ||
-        url.includes(PATHS.SIGN_UP) ||
+        url.includes(PATHS.USER_SIGN_UP) ||
         url.includes(PATHS.RESET_PASSWORD)
 
 }

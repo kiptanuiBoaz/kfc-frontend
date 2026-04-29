@@ -21,7 +21,7 @@ export const SignUpSchema =
             .max(300, "Password must be 300 characters or less")
             .required("Password is required"),
         confirmPassword: Yup.string()
-            .oneOf([Yup.ref("password"), null], "Passwords must match")
+            .oneOf([Yup.ref("password")], "Passwords must match")
             .required("Please confirm your password"),
     });
 
@@ -35,6 +35,6 @@ export const signupInitialValues = {
     confirmPassword: "",
     is_active: true,
     is_first_time_login: true,
-    organization: null,
+    organization: null as string | null,
     // role: "USER",
 }

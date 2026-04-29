@@ -7,8 +7,8 @@ import Footer from "@/components/landing-page/Footer";
 import Notiflix from "notiflix";
 import { isDashboardPage } from "@/utils/isDashboardPage";
 import "../src/styles/index.css";
+import { isOrgRoute } from "@/utils/isOrgAdmin";
 
-// Helper function to render routes recursively
 const renderRoutes = (routes: any[]) => {
   return routes.map((route) => {
     if (route.children) {
@@ -21,6 +21,7 @@ const renderRoutes = (routes: any[]) => {
     return <Route key={route.path} path={route.path} element={route.element} />;
   });
 };
+//comment
 
 function App() {
   Notiflix.Notify.init({
@@ -29,11 +30,11 @@ function App() {
     distance: "10px",
     timeout: 3000,
   });
-  // Restore auth state on app initialization
+
   useAuthRestore();
 
   const location = useLocation();
-  const isAdminRoute = isDashboardPage(location.pathname);
+  const isDashboard = isDashboardPage(location.pathname);
   const authRoutes = [
     "/login",
     "/sign-up",
@@ -45,8 +46,20 @@ function App() {
 
   return (
     <Box>
-      {!isAuthRoute && <Navbar />}
-      <Box sx={{ mt: location.pathname === "/" || isAuthRoute ? 0 : "80px" }} />
+      {!isAuthRoute && !isDashboard && !isOrgRoute(location.pathname) && (
+        <Navbar />
+      )}
+      <Box
+        sx={{
+          mt:
+            location.pathname === "/" ||
+            isAuthRoute ||
+            isDashboard ||
+            isOrgRoute(location.pathname)
+              ? 0
+              : "80px",
+        }}
+      />
       <Box
         component="main"
         sx={{
@@ -58,7 +71,9 @@ function App() {
         <Box sx={{ flexGrow: 1 }}>
           <Routes>{renderRoutes(routes)}</Routes>
         </Box>
-        {(!isAdminRoute || isAuthRoute) && <Footer />}
+        {(!isDashboard || isAuthRoute || isOrgRoute(location.pathname)) && (
+          <Footer />
+        )}
       </Box>
     </Box>
   );
