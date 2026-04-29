@@ -269,14 +269,8 @@ const Navbar: React.FC = () => {
           </Typography>
           <Divider sx={{ mb: 2 }} />
           <Stack spacing={1.5}>
-<<<<<<< HEAD
-            {getNavItems().map((item, index) => {
-              if (!item) return null;
-              const linkProps = item.to
-=======
             {getNavItems()?.map((item, index) => {
               const linkProps = item?.to
->>>>>>> 6ff324e4b8c6d83ae4eaf35fcdd3023917eff1e9
                 ? { component: RouterLink, to: item.to }
                 : {};
 
