@@ -30,7 +30,7 @@ import { useUser, useIsAuthenticated } from "@/hooks/useAuth";
 import { logout } from "@/redux/slices/authSlice";
 import { AppDispatch } from "@/redux/store";
 import { Notify } from "notiflix";
-import { UserProfileDropdown } from "@/components/shared/UserProfileDropdown";
+import { UserProfileMenu } from "@/components/UserProfileMenu";
 import { CustomContainer } from "@/components/shared/CustomContainer";
 
 const Navbar: React.FC = () => {
@@ -41,6 +41,15 @@ const Navbar: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+
+  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseUserMenu = () => {
+    setAnchorEl(null);
+  };
 
   const isAuthenticated = useIsAuthenticated();
   const user = useUser();
@@ -56,11 +65,11 @@ const Navbar: React.FC = () => {
     { label: "Course Catalog", variant: "text" as const, to: PATHS.COURSES },
     location.pathname === PATHS.HOME
       ? {
-          label: "Trainings Calendar",
-          variant: "text" as const,
-          to: "#calendar",
-          scrollTo: true,
-        }
+        label: "Trainings Calendar",
+        variant: "text" as const,
+        to: "#calendar",
+        scrollTo: true,
+      }
       : undefined,
   ];
 
@@ -202,7 +211,12 @@ const Navbar: React.FC = () => {
 
       {/* Auth Section - Right Aligned */}
       {isAuthenticated ? (
-        <UserProfileDropdown isScrolled={isScrolled} />
+        <UserProfileMenu
+          anchorEl={anchorEl}
+          onOpen={handleOpenUserMenu}
+          onClose={handleCloseUserMenu}
+          isScrolled={isScrolled}
+        />
       ) : (
         <Stack direction="row" spacing={2}>
           {authNavItems.map((item) => {
@@ -231,7 +245,12 @@ const Navbar: React.FC = () => {
       {/* Mobile Profile/Menu Button */}
       {isAuthenticated ? (
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <UserProfileDropdown size="small" />
+          <UserProfileMenu
+            size="small"
+            anchorEl={anchorEl}
+            onOpen={handleOpenUserMenu}
+            onClose={handleCloseUserMenu}
+          />
           <IconButton
             edge="end"
             color="inherit"
