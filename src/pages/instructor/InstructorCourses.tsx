@@ -62,8 +62,12 @@ const InstructorCourses = () => {
     refetch,
   } = useQuery<TCoursePrviewDetails[]>({
     queryKey: ["instructorCourses"],
-    queryFn: async () =>
-      apiClient.get("/main/v1/courses/?instructor=" + user?.guid),
+    queryFn: async () => {
+      const data = await apiClient.get<TCoursePrviewDetails[]>(
+        "/main/v1/courses/?instructor=" + user?.guid,
+      );
+      return data ?? [];
+    },
   });
 
   const courses = instructorCourses || [];
