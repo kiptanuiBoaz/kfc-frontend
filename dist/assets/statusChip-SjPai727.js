@@ -1,1 +1,0 @@
-import{j as t,n as a}from"./index-Cy-vCRXG.js";const n=e=>{const r={draft:"default",pending:"warning",published:"success",archived:"info",rejected:"error"},s=e?.toLowerCase()||"default";return t.jsx(a,{size:"small",label:e,color:r[s]||"default",sx:{textTransform:"capitalize"}})};export{n as r};
