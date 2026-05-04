@@ -99,7 +99,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
           "& img": {
             width: "100%",
             height: "100%",
-            objectFit: "cover",
+            objectFit: "contain",
             transition: "transform 0.3s ease",
           },
         }}
