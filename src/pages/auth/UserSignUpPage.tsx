@@ -33,8 +33,7 @@ const UserSignUpPage: React.FC = () => {
 
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const orgParam = searchParams.get("org");
-  console.log("Organization parameter from URL:", orgParam);
+  const orgParam = searchParams.get("org") as string;
   const navigate = useNavigate();
 
   const formik = useFormik({
@@ -47,7 +46,8 @@ const UserSignUpPage: React.FC = () => {
 
         let submitValues = { ...values };
         if (orgParam) {
-          submitValues.organization = orgParam;
+          // @ts-ignore
+          submitValues.organization = orgParam!;
         }
 
         await apiClient.post("/main/v1/user/register/", submitValues);
@@ -280,7 +280,7 @@ const UserSignUpPage: React.FC = () => {
             </Grid>
           </Box>
           <Stack direction={"column"} justifyContent={"start"} spacing={1}>
-            <Typography
+            {/* <Typography
               variant="body2"
               color="text.secondary"
               textAlign="center"
@@ -293,7 +293,7 @@ const UserSignUpPage: React.FC = () => {
               >
                 Register with your member ID
               </Link>
-            </Typography>
+            </Typography> */}
             <Typography
               variant="body2"
               color="text.secondary"

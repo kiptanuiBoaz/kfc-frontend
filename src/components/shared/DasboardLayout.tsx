@@ -1,7 +1,6 @@
 import React from "react";
 import {
   AppBar,
-  Avatar,
   Box,
   Button,
   Divider,
@@ -17,13 +16,13 @@ import {
   Toolbar,
   Typography,
   useTheme,
-  alpha,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useLocation, useNavigate } from "react-router-dom";
 import { PATHS } from "@/navigation/paths";
 import { useUser } from "@/hooks/useAuth";
 import { MenuItem } from "@/navigation/dashboard-menus";
+import { UserProfileDropdown } from "@/components/shared/UserProfileDropdown";
 
 const drawerWidth = 260;
 
@@ -55,7 +54,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const [mobileOpen, setMobileOpen] = React.useState(false);
 
   const isAdminRoute = location.pathname.startsWith(
-    PATHS.ADMIN_DASHBOARD.replace("/*", "")
+    PATHS.ADMIN_DASHBOARD.replace("/*", ""),
   );
 
   const handleDrawerToggle = () => {
@@ -226,37 +225,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               ))}
             </Box>
 
-            {/* User Profile Section */}
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-              <Box
-                sx={{
-                  display: { xs: "none", sm: "flex" },
-                  flexDirection: "column",
-                  alignItems: "flex-end",
-                }}
-              >
-                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                  {user ? `${user.first_name} ${user.last_name}` : "Guest User"}
-                </Typography>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{ fontWeight: 500 }}
-                >
-                  {userRole}
-                </Typography>
-              </Box>
-              <Avatar
-                src={user?.image || undefined}
-                sx={{
-                  width: 40,
-                  height: 40,
-                  border: `2px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-                }}
-              >
-                {user?.first_name?.[0]?.toUpperCase()}
-              </Avatar>
-            </Box>
+            <UserProfileDropdown />
           </Toolbar>
         </AppBar>
         <Box sx={{ p: { xs: 2, md: 4 } }}>{renderContent()}</Box>

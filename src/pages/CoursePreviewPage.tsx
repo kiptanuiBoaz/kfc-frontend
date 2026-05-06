@@ -137,16 +137,17 @@ export const CoursePreviewPage = () => {
               <Box
                 component="img"
                 src={
-                  course?.image
-                    ? `${MEDIA_BASE_URL}${course.image}`
-                    : "/images/logos/horizontal_logo.png"
+                  course?.image?.startsWith("https://")
+                  ? `${course?.image}`
+                  : "/images/logos/horizontal_logo.png"
                 }
+                
                 alt={course.title}
                 sx={{
                   width: { xs: "100%", sm: 320, md: 340 },
                   maxWidth: { xs: "100%", sm: 320, md: 340 },
                   height: { xs: 160, sm: 200, md: 250 },
-                  objectFit: "cover",
+                  objectFit: "contain",
                   borderRadius: 2,
                   boxShadow: { xs: 1, md: 2 },
                 }}
