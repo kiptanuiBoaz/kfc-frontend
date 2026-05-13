@@ -90,7 +90,7 @@ export const Hero = () => {
                 fontSize: { xs: "1rem", md: "1.125rem" },
               }}
             >
-              Learn floriculture best practices—from propagation and greenhouse
+              Learn floriculture best practices-from propagation and greenhouse
               management to post-harvest handling, market access, and business
               operations. Build the skills to scale your flower farming
               sustainably and profitably.

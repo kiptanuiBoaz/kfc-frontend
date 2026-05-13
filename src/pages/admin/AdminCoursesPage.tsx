@@ -43,7 +43,10 @@ export const AdminCoursesPage: React.FC = () => {
     isError,
   } = useQuery<TCoursePrviewDetails[]>({
     queryKey: ["adminCourses"],
-    queryFn: () => apiClient.get<TCoursePrviewDetails[]>("/main/v1/courses/"),
+    queryFn: async () => {
+      const data = await apiClient.get<TCoursePrviewDetails[]>("/main/v1/courses/");
+      return data ?? [];
+    },
   });
 
   //admin courses

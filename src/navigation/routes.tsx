@@ -7,6 +7,7 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Outlet } from "react-router-dom";
 import MemberSignUpPage from "@/pages/auth/MemberSignUp";
 import UserSignUpPage from "@/pages/auth/UserSignUpPage";
+import OrgUsers from "@/pages/org/OrgUsers";
 const OrgRegistrationPage = lazy(() => import("@/pages/OrgRegistrationPage"));
 
 // Lazy imports
@@ -61,8 +62,6 @@ const QuizManagementPage = lazy(() =>
 const TakeCoursePage = lazy(() => import("@/pages/user/TakeCoursePage"));
 const TakeQuizPage = lazy(() => import("@/pages/user/TakeQuizPage"));
 const BlankDashboardPage = lazy(() => import("@/pages/dashboard/BlankDashboardPage"));
-const OrgUsers = lazy(() => import("@/pages/org/OrgUsers"));
-const OrgHome = lazy(() => import("@/pages/org/Home"));
 
 export const routes = [
   {
@@ -181,13 +180,20 @@ export const routes = [
     path: `${PATHS.ORG_DASHBOARD}*`,
     element: (
       <AuthGuard>
-        <DashboardLayout />
+        <RoleGuard requiredRoles={["org_admin"]}>
+          <DashboardLayout />
+        </RoleGuard>
       </AuthGuard>
     ),
     children: [
       {
         path: "",
-        element: <LazyPage component={OrgHome} />,
+        element: (
+          <LazyPage
+            component={BlankDashboardPage}
+            componentProps={{ title: "Dashboard" }}
+          />
+        ),
       },
       {
         path: "courses",
@@ -198,6 +204,7 @@ export const routes = [
           />
         ),
       },
+
       {
         path: "users",
         element: <LazyPage component={OrgUsers} />,
