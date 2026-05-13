@@ -61,6 +61,8 @@ const QuizManagementPage = lazy(() =>
 const TakeCoursePage = lazy(() => import("@/pages/user/TakeCoursePage"));
 const TakeQuizPage = lazy(() => import("@/pages/user/TakeQuizPage"));
 const BlankDashboardPage = lazy(() => import("@/pages/dashboard/BlankDashboardPage"));
+const OrgUsers = lazy(() => import("@/pages/org/OrgUsers"));
+const OrgHome = lazy(() => import("@/pages/org/Home"));
 
 export const routes = [
   {
@@ -185,12 +187,7 @@ export const routes = [
     children: [
       {
         path: "",
-        element: (
-          <LazyPage
-            component={BlankDashboardPage}
-            componentProps={{ title: "Dashboard" }}
-          />
-        ),
+        element: <LazyPage component={OrgHome} />,
       },
       {
         path: "courses",
@@ -203,12 +200,7 @@ export const routes = [
       },
       {
         path: "users",
-        element: (
-          <LazyPage
-            component={BlankDashboardPage}
-            componentProps={{ title: "Users" }}
-          />
-        ),
+        element: <LazyPage component={OrgUsers} />,
       },
     ],
   },
