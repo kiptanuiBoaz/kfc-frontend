@@ -30,7 +30,7 @@ import { useUser, useIsAuthenticated } from "@/hooks/useAuth";
 import { logout } from "@/redux/slices/authSlice";
 import { AppDispatch } from "@/redux/store";
 import { Notify } from "notiflix";
-import { UserProfileDropdown } from "@/components/shared/UserProfileDropdown";
+import { UserProfileMenu } from "@/components/UserProfileMenu";
 import { CustomContainer } from "@/components/shared/CustomContainer";
 
 const Navbar: React.FC = () => {

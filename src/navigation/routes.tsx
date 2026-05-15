@@ -61,7 +61,7 @@ const QuizManagementPage = lazy(() =>
 );
 const TakeCoursePage = lazy(() => import("@/pages/user/TakeCoursePage"));
 const TakeQuizPage = lazy(() => import("@/pages/user/TakeQuizPage"));
-const BlankDashboardPage = lazy(() => import("@/pages/dashboard/BlankDashboardPage"));
+const BlankDashboardPage = lazy(() => import("../pages/dashboard/BlankDashboardPage"));
 
 export const routes = [
   {
