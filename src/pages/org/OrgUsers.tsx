@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -23,6 +23,7 @@ import {
 import { Plus, Search, Edit2, UserCheck, UserX, Mail } from "lucide-react";
 import { useUser } from "@/hooks/useAuth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "react-router-dom";
 import { organizationApi } from "@/api/organizationApi";
 import { apiClient } from "@/api/apiClient";
 import { OrgUserModal } from "@/components/org/OrgUserModal";
@@ -82,6 +83,16 @@ const OrgUsers: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<OrganizationUser | null>(null);
+
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.openInvite) {
+      setIsModalOpen(true);
+      // Clear location state to prevent re-opening on manual page refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // Pre-fetch roles to make them load faster in the modal
   useQuery({
