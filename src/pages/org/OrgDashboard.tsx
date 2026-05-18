@@ -119,7 +119,7 @@ const OrgDashboard: React.FC = () => {
               mb: 0.5,
             }}
           >
-            Welcome back, Admin! 👋
+            Welcome back, Admin!
           </Typography>
           <Typography variant="body1" color="text.secondary" fontWeight={500}>
             Here is the learning and member overview for <strong style={{ color: theme.palette.primary.main }}>{orgName}</strong>.
