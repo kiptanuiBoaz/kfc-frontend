@@ -27,19 +27,19 @@ const socialLinks = [
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
   const location = useLocation();
-  const isDashboardOrOrg = 
-    location.pathname.startsWith("/org") || 
-    location.pathname.startsWith("/dashboard") || 
+  const isDashboardOrOrg =
+    location.pathname.startsWith("/org") ||
+    location.pathname.startsWith("/dashboard") ||
     location.pathname.startsWith("/instructor");
 
   return (
     <Box
       component="footer"
-      sx={{ 
-        bgcolor: "grey.100", 
-        mt: 8, 
-        pt: 4, 
-        px: 0, 
+      sx={{
+        bgcolor: "grey.100",
+        mt: 8,
+        pt: 4,
+        px: 0,
         pb: 2,
         pl: isDashboardOrOrg ? { xs: 0, md: "260px" } : 0,
         transition: "padding-left 0.3s ease",
@@ -71,10 +71,10 @@ const Footer: React.FC = () => {
           />
         </Stack>
 
-        <Stack 
-          direction="column" 
-          alignItems="center" 
-          justifyContent="center" 
+        <Stack
+          direction="column"
+          alignItems="center"
+          justifyContent="center"
           spacing={1.5}
         >
           <Typography
