@@ -11,6 +11,8 @@ export interface CreateOrganizationUserPayload {
     phone_number?: string;
     role: string; // role guid
     is_active: boolean;
+    organization?: string;
+    organization_guid?: string;
 }
 
 export interface UpdateOrganizationUserPayload extends Partial<CreateOrganizationUserPayload> {

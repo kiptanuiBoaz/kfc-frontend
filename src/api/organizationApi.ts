@@ -7,13 +7,12 @@ import {
 
 export const organizationApi = {
     getOrganizationUsers: async () => {
-        // Assuming this endpoint returns the users for the logged-in organization
-        const response = await apiClient.get<OrganizationUser[]>("/main/v1/organization/users/");
+        const response = await apiClient.get<OrganizationUser[]>("/main/v1/organization/users/all/");
         return response || [];
     },
 
     createOrganizationUser: async (data: CreateOrganizationUserPayload) => {
-        return await apiClient.post<OrganizationUser>("/main/v1/organization/user/create/", data);
+        return await apiClient.post<OrganizationUser>("/main/v1/user/admin_create/", data);
     },
 
     updateOrganizationUser: async ({ guid, ...data }: UpdateOrganizationUserPayload) => {

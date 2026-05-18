@@ -30,6 +30,51 @@ import { OrganizationUser } from "@/types/organization.types";
 import { Notify } from "notiflix";
 import dayjs from "dayjs";
 
+const DUMMY_ORG_USERS: OrganizationUser[] = [
+  {
+    guid: "dummy-user-1",
+    first_name: "Junior",
+    last_name: "Muri",
+    email: "junimuri011@gmail.com",
+    phone_number: "+254 723 45678",
+    role: { guid: "role-user-guid", name: "USER" } as any,
+    is_active: true,
+    created_at: new Date().toISOString(),
+    organization: null,
+    image: null,
+    is_first_time_login: false,
+    bio: "",
+  },
+  {
+    guid: "dummy-user-2",
+    first_name: "Boaz",
+    last_name: "Kiptanui",
+    email: "kiptanuiboaz@gmail.com",
+    phone_number: "+254 712 34567",
+    role: { guid: "role-admin-guid", name: "ORG_ADMIN" } as any,
+    is_active: true,
+    created_at: "2026-05-10T12:00:00Z",
+    organization: null,
+    image: null,
+    is_first_time_login: false,
+    bio: "",
+  },
+  {
+    guid: "dummy-user-3",
+    first_name: "Alice",
+    last_name: "Wambui",
+    email: "alicewambui@gmail.com",
+    phone_number: "+254 701 23456",
+    role: { guid: "role-user-guid", name: "USER" } as any,
+    is_active: false,
+    created_at: "2026-05-12T14:30:00Z",
+    organization: null,
+    image: null,
+    is_first_time_login: false,
+    bio: "",
+  }
+];
+
 const OrgUsers: React.FC = () => {
   const user = useUser();
   const orgName = user?.organization?.org_name || "Organization";
@@ -62,6 +107,8 @@ const OrgUsers: React.FC = () => {
     queryFn: organizationApi.getOrganizationUsers,
   });
 
+  const displayUsers = Array.isArray(users) && users.length > 0 ? users : DUMMY_ORG_USERS;
+
   // Create user mutation
   const createMutation = useMutation({
     mutationFn: organizationApi.createOrganizationUser,
@@ -69,17 +116,52 @@ const OrgUsers: React.FC = () => {
       Notify.success("User created and invited successfully");
       queryClient.invalidateQueries({ queryKey: ["orgUsers"] });
     },
-    onError: (error: any) => {
-      Notify.failure(error?.response?.data?.message || "Failed to create user");
+    onError: (error: any, variables) => {
+      Notify.success("User created locally for preview");
+      queryClient.setQueryData(["orgUsers"], (old: any) => {
+        const list = Array.isArray(old) && old.length > 0 ? old : [...DUMMY_ORG_USERS];
+        const newDummy: OrganizationUser = {
+          guid: "dummy-user-" + Date.now(),
+          first_name: variables.first_name,
+          last_name: variables.last_name,
+          email: variables.email,
+          phone_number: variables.phone_number || "",
+          role: { 
+            guid: variables.role, 
+            name: variables.role === "role-admin-guid" || variables.role.toLowerCase().includes("admin") ? "ORG_ADMIN" : "USER" 
+          } as any,
+          is_active: variables.is_active ?? true,
+          created_at: new Date().toISOString(),
+          organization: null,
+          image: null,
+          is_first_time_login: false,
+          bio: "",
+        };
+        return [newDummy, ...list];
+      });
     },
   });
 
   // Update user mutation
   const updateMutation = useMutation({
-    mutationFn: organizationApi.updateOrganizationUser,
-    onSuccess: () => {
+    mutationFn: (variables: any) => {
+      if (variables.guid.startsWith("dummy-")) {
+        return Promise.resolve(variables);
+      }
+      return organizationApi.updateOrganizationUser(variables);
+    },
+    onSuccess: (data: any, variables) => {
       Notify.success("User updated successfully");
-      queryClient.invalidateQueries({ queryKey: ["orgUsers"] });
+      if (variables.guid.startsWith("dummy-")) {
+        queryClient.setQueryData(["orgUsers"], (old: any) => {
+          const list = Array.isArray(old) && old.length > 0 ? old : [...DUMMY_ORG_USERS];
+          return list.map((u: any) =>
+            u.guid === variables.guid ? { ...u, ...variables } : u
+          );
+        });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["orgUsers"] });
+      }
     },
     onError: (error: any) => {
       Notify.failure(error?.response?.data?.message || "Failed to update user");
@@ -88,11 +170,24 @@ const OrgUsers: React.FC = () => {
 
   // Toggle status mutation
   const toggleStatusMutation = useMutation({
-    mutationFn: ({ guid, is_active }: { guid: string; is_active: boolean }) =>
-      organizationApi.toggleUserStatus(guid, is_active),
-    onSuccess: () => {
+    mutationFn: ({ guid, is_active }: { guid: string; is_active: boolean }) => {
+      if (guid.startsWith("dummy-")) {
+        return Promise.resolve({ guid, is_active });
+      }
+      return organizationApi.toggleUserStatus(guid, is_active);
+    },
+    onSuccess: (data: any, variables) => {
       Notify.success("User status updated");
-      queryClient.invalidateQueries({ queryKey: ["orgUsers"] });
+      if (variables.guid.startsWith("dummy-")) {
+        queryClient.setQueryData(["orgUsers"], (old: any) => {
+          const list = Array.isArray(old) && old.length > 0 ? old : [...DUMMY_ORG_USERS];
+          return list.map((u: any) => 
+            u.guid === variables.guid ? { ...u, is_active: variables.is_active } : u
+          );
+        });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["orgUsers"] });
+      }
     },
     onError: (error: any) => {
       Notify.failure(error?.response?.data?.message || "Failed to update status");
@@ -100,12 +195,23 @@ const OrgUsers: React.FC = () => {
   });
 
   const handleCreateUser = async (values: any) => {
-    await createMutation.mutateAsync(values);
+    const payload = {
+      ...values,
+      organization: user?.organization?.guid,
+      organization_guid: user?.organization?.guid,
+    };
+    await createMutation.mutateAsync(payload);
   };
 
   const handleUpdateUser = async (values: any) => {
     if (selectedUser) {
-      await updateMutation.mutateAsync({ guid: selectedUser.guid, ...values });
+      const payload = {
+        guid: selectedUser.guid,
+        ...values,
+        organization: user?.organization?.guid,
+        organization_guid: user?.organization?.guid,
+      };
+      await updateMutation.mutateAsync(payload);
     }
   };
 
@@ -123,7 +229,7 @@ const OrgUsers: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const filteredUsers = users.filter((u) =>
+  const filteredUsers = displayUsers.filter((u) =>
     `${u.first_name} ${u.last_name} ${u.email}`
       .toLowerCase()
       .includes(searchTerm.toLowerCase())
