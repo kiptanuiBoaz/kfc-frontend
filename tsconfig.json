@@ -12,6 +12,7 @@
     "noUnusedParameters": false,
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
+    "ignoreDeprecations": "6.0",
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "preserve",
