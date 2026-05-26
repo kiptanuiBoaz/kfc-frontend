@@ -71,10 +71,12 @@ export const QuizzesTab: React.FC<QuizzesTabProps> = ({
     refetch: refetchModules,
   } = useQuery<TCourseModule[]>({
     queryKey: ["courseModules", courseGuid],
-    queryFn: async () =>
-      await apiClient.get<TCourseModule[]>(
+    queryFn: async () => {
+      const data = await apiClient.get<TCourseModule[]>(
         `/main/v1/courses/${courseGuid}/modules/`
-      ),
+      );
+      return data ?? [];
+    },
     enabled: !!courseGuid,
   });
 

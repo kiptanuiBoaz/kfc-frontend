@@ -86,12 +86,15 @@ const InstructorDashboard: React.FC = () => {
   ];
 
   const {
-    data: instructorCourses,
+    data: instructorCourses = [],
     isLoading: coursesLoading,
     error: coursesError,
   } = useQuery<TCourse[]>({
     queryKey: ["instructorCourses"],
-    queryFn: async () => apiClient.get("/main/v1/my-courses/"),
+    queryFn: async () => {
+      const data = await apiClient.get<TCourse[]>("/main/v1/my-courses/");
+      return data ?? [];
+    },
   });
 
   const handleViewAllCourses = () => {

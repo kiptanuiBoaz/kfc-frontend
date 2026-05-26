@@ -49,7 +49,7 @@ export const QuizManagementPage: React.FC = () => {
     data: quiz,
     isLoading: isQuizLoading,
     isError: isQuizError,
-  } = useQuery<TQuiz>({
+  } = useQuery<TQuiz | undefined>({
     queryKey: ["quiz", quizGuid],
     queryFn: async () =>
       await apiClient.get<TQuiz>(`/main/v1/quizzes/${quizGuid}/`),
@@ -62,10 +62,12 @@ export const QuizManagementPage: React.FC = () => {
     isError: isQuestionsError,
   } = useQuery<TCourseQuestion[]>({
     queryKey: ["quizQuestions", quizGuid],
-    queryFn: async () =>
-      await apiClient.get<TCourseQuestion[]>(
+    queryFn: async () => {
+      const data = await apiClient.get<TCourseQuestion[]>(
         `/main/v1/quizzes/${quizGuid}/questions/`
-      ),
+      );
+      return data ?? [];
+    },
     enabled: !!quizGuid,
   });
 

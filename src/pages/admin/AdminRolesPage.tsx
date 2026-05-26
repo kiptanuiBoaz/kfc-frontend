@@ -35,7 +35,10 @@ export const AdminRolesPage: React.FC = () => {
     isError,
   } = useQuery<TRole[]>({
     queryKey: ["roles"],
-    queryFn: () => apiClient.get<TRole[]>("/main/v1/role/all/"),
+    queryFn: async () => {
+      const data = await apiClient.get<TRole[]>("/main/v1/role/all/");
+      return data ?? [];
+    },
   });
 
   const createMutation = useMutation({

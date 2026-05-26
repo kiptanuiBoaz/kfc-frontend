@@ -71,6 +71,10 @@ export const EnrollCourse = () => {
   }
 
   const handleEnrollment = async () => {
+    if (!user) {
+      Notify.failure("Please log in to complete your enrollment.");
+      return;
+    }
     try {
       await apiClient.post(`/main/v1/enroll/`, {
         course: course.guid,

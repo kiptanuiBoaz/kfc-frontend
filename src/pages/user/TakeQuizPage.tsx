@@ -49,7 +49,7 @@ const TakeQuizPage: React.FC = () => {
 
   const selectedQuiz = quizzes.find((q) => q.guid === quizGuid);
 
-  const { data: results, isLoading: resultsLoading } = useQuery<TQuizResults>({
+  const { data: results, isLoading: resultsLoading } = useQuery<TQuizResults | undefined>({
     queryKey: ["quizResults", quizGuid],
     enabled: !!quizGuid,
     queryFn: async () =>
@@ -178,7 +178,7 @@ const TakeQuizPage: React.FC = () => {
               </Typography>
             )}
 
-            {showingResults && results?.completed && !retrying ? (
+            {showingResults && results && results.completed && !retrying ? (
               <Stack spacing={3}>
                 <Alert severity="success">
                   Quiz completed! Your score: {results.total_marks} /{" "}
@@ -243,7 +243,7 @@ const TakeQuizPage: React.FC = () => {
                   </Card>
                 ))}
                 <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-                  {user.role.name !== "ADMIN" && (
+                  {user?.role?.name !== "ADMIN" && (
                     <Button
                       variant="contained"
                       onClick={handleSubmit}

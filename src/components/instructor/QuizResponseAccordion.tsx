@@ -42,7 +42,7 @@ export const QuizResponseAccordion: React.FC<{ quiz: any }> = React.memo(
       data: response,
       isLoading,
       refetch,
-    } = useQuery<TQuizSubmissionsResponse>({
+    } = useQuery<TQuizSubmissionsResponse | undefined>({
       queryKey: ["quizSubmissions", quiz.guid],
       queryFn: async () =>
         await apiClient.get<TQuizSubmissionsResponse>(
