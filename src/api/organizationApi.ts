@@ -4,11 +4,30 @@ import {
     UpdateOrganizationUserPayload, 
     OrganizationUser 
 } from "@/types/organization.types";
+import { TCoursePrviewDetails } from "@/types/course.types";
 
 export const organizationApi = {
     getOrganizationUsers: async () => {
         const response = await apiClient.get<OrganizationUser[]>("/main/v1/organization/users/all/");
         return response || [];
+    },
+
+    getOrganizationCourses: async () => {
+        const response = await apiClient.get<TCoursePrviewDetails[]>("/main/v1/courses/");
+        return response || [];
+    },
+
+    assignCoursesToUsers: async (userGuids: string[], courseGuids: string[]) => {
+        const enrollments = userGuids.flatMap((userGuid) =>
+            courseGuids.map((courseGuid) =>
+                apiClient.post(`/main/v1/enroll/`, {
+                    course: courseGuid,
+                    user: userGuid,
+                })
+            )
+        );
+
+        return await Promise.all(enrollments);
     },
 
     createOrganizationUser: async (data: CreateOrganizationUserPayload) => {

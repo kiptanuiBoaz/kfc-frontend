@@ -1,20 +1,25 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import {
+  Alert,
+  Autocomplete,
+  Avatar,
   Box,
   Button,
-  Grid,
-  Stack,
-  Typography,
-  Paper,
-  Avatar,
+  Checkbox,
+  Chip,
   Divider,
+  Grid,
   List,
   ListItem,
   ListItemAvatar,
   ListItemText,
-  Chip,
+  Paper,
+  Stack,
+  ToggleButton,
+  ToggleButtonGroup,
+  TextField,
+  Typography,
   useTheme,
-  alpha,
 } from "@mui/material";
 import {
   Users,
@@ -24,15 +29,15 @@ import {
   Plus,
   ArrowRight,
   TrendingUp,
-  Award,
 } from "lucide-react";
 import { AnalyticsCard } from "@/components/shared/AnalyticsCard";
 import { useNavigate } from "react-router-dom";
-import { PATHS } from "@/navigation/paths";
 import { useUser } from "@/hooks/useAuth";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { organizationApi } from "@/api/organizationApi";
 import { OrganizationUser } from "@/types/organization.types";
+import { TCoursePrviewDetails } from "@/types/course.types";
+import { Notify } from "notiflix";
 
 const DUMMY_ORG_USERS: OrganizationUser[] = [
   {
@@ -93,9 +98,63 @@ const OrgDashboard: React.FC = () => {
     queryFn: organizationApi.getOrganizationUsers,
   });
 
+  const {
+    data: courses = [],
+    isLoading: coursesLoading,
+    isError: coursesError,
+  } = useQuery<TCoursePrviewDetails[]>({
+    queryKey: ["orgCourses"],
+    queryFn: organizationApi.getOrganizationCourses,
+  });
+
   const displayUsers = Array.isArray(users) && users.length > 0 ? users : DUMMY_ORG_USERS;
   const activeCount = displayUsers.filter((u) => u.is_active).length;
   const inactiveCount = displayUsers.filter((u) => !u.is_active).length;
+
+  const [selectedUsers, setSelectedUsers] = useState<OrganizationUser[]>([]);
+  const [selectedCourses, setSelectedCourses] = useState<TCoursePrviewDetails[]>([]);
+  const [assignmentMode, setAssignmentMode] = useState<"user-first" | "course-first">(
+    "user-first"
+  );
+
+  const selectedModeText = useMemo(() => {
+    if (selectedUsers.length === 0 && selectedCourses.length === 0) {
+      return "Choose one or more users and courses to assign.";
+    }
+    if (selectedUsers.length > 0 && selectedCourses.length > 0) {
+      return `Assigning ${selectedCourses.length} course(s) to ${selectedUsers.length} user(s).`;
+    }
+    return assignmentMode === "user-first"
+      ? `Selected ${selectedUsers.length} user(s). Now choose course(s).`
+      : `Selected ${selectedCourses.length} course(s). Now choose user(s).`;
+  }, [assignmentMode, selectedCourses.length, selectedUsers.length]);
+
+  const assignMutation = useMutation({
+    mutationFn: ({ userGuids, courseGuids }: { userGuids: string[]; courseGuids: string[] }) =>
+      organizationApi.assignCoursesToUsers(userGuids, courseGuids),
+    onSuccess: () => {
+      Notify.success("Courses assigned successfully to selected users.");
+      setSelectedUsers([]);
+      setSelectedCourses([]);
+    },
+    onError: () => {
+      Notify.failure("Unable to assign courses. Please try again later.");
+    },
+  });
+
+  const hasSelection = selectedUsers.length > 0 && selectedCourses.length > 0;
+
+  const handleAssignCourses = () => {
+    if (!hasSelection) return;
+    assignMutation.mutate({
+      userGuids: selectedUsers.map((user) => user.guid),
+      courseGuids: selectedCourses.map((course) => course.guid),
+    });
+  };
+
+  const handleModeChange = (_: React.MouseEvent<HTMLElement>, value: "user-first" | "course-first" | null) => {
+    if (value) setAssignmentMode(value);
+  };
 
   return (
     <Stack spacing={4} sx={{ py: 3, px: { xs: 2, md: 4 } }}>
@@ -323,6 +382,168 @@ const OrgDashboard: React.FC = () => {
             >
               View all members
             </Button>
+          </Paper>
+        </Grid>
+      </Grid>
+
+      <Grid container spacing={4}>
+        <Grid item xs={12}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              borderRadius: 4,
+              border: "1px solid",
+              borderColor: "divider",
+            }}
+          >
+            <Stack spacing={3}>
+              <Box display="flex" justifyContent="space-between" alignItems="center">
+                <Box>
+                  <Typography variant="h6" fontWeight={700}>
+                    Bulk Course Assignment
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Assign one or more courses to one or more users directly from the org admin dashboard.
+                  </Typography>
+                </Box>
+                <Chip
+                  label={selectedModeText}
+                  color={hasSelection ? "success" : "default"}
+                  variant="outlined"
+                  size="small"
+                />
+              </Box>
+
+              <ToggleButtonGroup
+                value={assignmentMode}
+                exclusive
+                size="small"
+                onChange={handleModeChange}
+                aria-label="assignment-mode"
+              >
+                <ToggleButton value="user-first">
+                  User(s) → Course(s)
+                </ToggleButton>
+                <ToggleButton value="course-first">
+                  Course(s) → User(s)
+                </ToggleButton>
+              </ToggleButtonGroup>
+
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={6}>
+                  <Autocomplete
+                    multiple
+                    disableCloseOnSelect
+                    options={displayUsers}
+                    value={selectedUsers}
+                    getOptionLabel={(option) => `${option.first_name} ${option.last_name} (${option.email})`}
+                    isOptionEqualToValue={(option, value) => option.guid === value.guid}
+                    onChange={(_, value) => setSelectedUsers(value)}
+                    renderOption={(props, option, { selected }) => (
+                      <li {...props}>
+                        <Checkbox
+                          style={{ marginRight: 8 }}
+                          checked={selected}
+                          size="small"
+                        />
+                        {option.first_name} {option.last_name} — {option.email}
+                      </li>
+                    )}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label={
+                          assignmentMode === "course-first"
+                            ? "Select Users (target users)"
+                            : "Select Users"
+                        }
+                        placeholder={
+                          assignmentMode === "course-first"
+                            ? "Choose one or more users to receive selected courses"
+                            : "Choose users"
+                        }
+                        helperText="Pick one or more users to enroll in courses."
+                      />
+                    )}
+                  />
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <Autocomplete
+                    multiple
+                    disableCloseOnSelect
+                    options={courses}
+                    value={selectedCourses}
+                    getOptionLabel={(option) => option.title}
+                    isOptionEqualToValue={(option, value) => option.guid === value.guid}
+                    onChange={(_, value) => setSelectedCourses(value)}
+                    loading={coursesLoading}
+                    noOptionsText={
+                      coursesError
+                        ? "Could not load courses from API."
+                        : "No courses available."
+                    }
+                    renderOption={(props, option, { selected }) => (
+                      <li {...props}>
+                        <Checkbox
+                          style={{ marginRight: 8 }}
+                          checked={selected}
+                          size="small"
+                        />
+                        {option.title}
+                      </li>
+                    )}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label={
+                          assignmentMode === "user-first"
+                            ? "Select Courses (courses to assign)"
+                            : "Select Courses"
+                        }
+                        placeholder={
+                          assignmentMode === "user-first"
+                            ? "Choose one or more courses for selected users"
+                            : "Choose courses"
+                        }
+                        helperText="Pick one or more courses available in your org."
+                      />
+                    )}
+                  />
+                </Grid>
+              </Grid>
+
+              <Alert severity="info" iconMapping={{ info: <ShieldCheck size={18} /> }}>
+                Selected users will receive access to all selected courses through enrollment.
+              </Alert>
+
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems="center">
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleAssignCourses}
+                  disabled={!hasSelection || assignMutation.isPending}
+                  sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700 }}
+                >
+                  {assignMutation.isPending ? "Assigning..." : "Assign Courses"}
+                </Button>
+                <Button
+                  variant="text"
+                  color="inherit"
+                  onClick={() => {
+                    setSelectedUsers([]);
+                    setSelectedCourses([]);
+                  }}
+                  sx={{ textTransform: "none", borderRadius: 2, fontWeight: 600 }}
+                >
+                  Clear Selection
+                </Button>
+                <Typography variant="body2" color="text.secondary">
+                  {selectedUsers.length} user(s) selected · {selectedCourses.length} course(s) selected
+                </Typography>
+              </Stack>
+            </Stack>
           </Paper>
         </Grid>
       </Grid>
