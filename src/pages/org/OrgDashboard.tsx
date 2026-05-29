@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   Alert,
   Autocomplete,
@@ -7,14 +7,25 @@ import {
   Button,
   Checkbox,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
   Grid,
+  IconButton,
   List,
   ListItem,
   ListItemAvatar,
   ListItemText,
   Paper,
   Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   ToggleButton,
   ToggleButtonGroup,
   TextField,
@@ -29,6 +40,7 @@ import {
   Plus,
   ArrowRight,
   TrendingUp,
+  Trash2,
 } from "lucide-react";
 import { AnalyticsCard } from "@/components/shared/AnalyticsCard";
 import { useNavigate } from "react-router-dom";
@@ -84,6 +96,22 @@ const DUMMY_ORG_USERS: OrganizationUser[] = [
   }
 ];
 
+type AssignmentHistoryItem = {
+  id: string;
+  userGuid: string;
+  userName: string;
+  courseTitle: string;
+  assignedAt: string;
+  mode: "user-first" | "course-first";
+};
+
+type AssignCoursesPayload = {
+  userGuids: string[];
+  courseGuids: string[];
+  selectedUsers: OrganizationUser[];
+  selectedCourses: TCoursePrviewDetails[];
+};
+
 const OrgDashboard: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
@@ -116,6 +144,49 @@ const OrgDashboard: React.FC = () => {
   const [assignmentMode, setAssignmentMode] = useState<"user-first" | "course-first">(
     "user-first"
   );
+  const [assignmentHistory, setAssignmentHistory] = useState<AssignmentHistoryItem[]>(() => {
+    // Load from localStorage on initial state
+    try {
+      const saved = localStorage.getItem("orgDashboardAssignmentHistory");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Persist assignment history to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("orgDashboardAssignmentHistory", JSON.stringify(assignmentHistory));
+  }, [assignmentHistory]);
+
+  // State for Add Course dialog
+  const [addCourseDialog, setAddCourseDialog] = useState<{
+    open: boolean;
+    userGuid: string | null;
+    userName: string | null;
+  }>({
+    open: false,
+    userGuid: null,
+    userName: null,
+  });
+  const [selectedCourseToAdd, setSelectedCourseToAdd] = useState<TCoursePrviewDetails | null>(null);
+
+  const recentHistorySeed = useMemo<AssignmentHistoryItem[]>(() => {
+    const seedUsers = displayUsers.slice(0, 2);
+    const seedCourses = courses.slice(0, 2);
+    if (seedUsers.length === 0 || seedCourses.length === 0) return [];
+
+    return seedUsers.flatMap((seedUser, index) =>
+      seedCourses.slice(0, 1).map((seedCourse, innerIndex) => ({
+        id: `seed-${seedUser.guid}-${seedCourse.guid}-${innerIndex}`,
+        userGuid: seedUser.guid,
+        userName: `${seedUser.first_name} ${seedUser.last_name}`,
+        courseTitle: seedCourse.title,
+        assignedAt: new Date(Date.now() - (index + 1) * 60 * 60 * 1000).toISOString(),
+        mode: "user-first",
+      }))
+    );
+  }, [courses, displayUsers]);
 
   const selectedModeText = useMemo(() => {
     if (selectedUsers.length === 0 && selectedCourses.length === 0) {
@@ -130,9 +201,32 @@ const OrgDashboard: React.FC = () => {
   }, [assignmentMode, selectedCourses.length, selectedUsers.length]);
 
   const assignMutation = useMutation({
-    mutationFn: ({ userGuids, courseGuids }: { userGuids: string[]; courseGuids: string[] }) =>
+    mutationFn: ({ userGuids, courseGuids }: AssignCoursesPayload) =>
       organizationApi.assignCoursesToUsers(userGuids, courseGuids),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      const selectedUserMap = new Map(
+        variables.selectedUsers.map((selectedUser) => [
+          selectedUser.guid,
+          `${selectedUser.first_name} ${selectedUser.last_name}`,
+        ])
+      );
+      const selectedCourseMap = new Map(
+        variables.selectedCourses.map((selectedCourse) => [selectedCourse.guid, selectedCourse.title])
+      );
+      const assignedAt = new Date().toISOString();
+
+      const newHistoryRows: AssignmentHistoryItem[] = variables.userGuids.flatMap((userGuid) =>
+        variables.courseGuids.map((courseGuid) => ({
+          id: `${userGuid}-${courseGuid}-${assignedAt}`,
+          userGuid,
+          userName: selectedUserMap.get(userGuid) || userGuid,
+          courseTitle: selectedCourseMap.get(courseGuid) || courseGuid,
+          assignedAt,
+          mode: assignmentMode,
+        }))
+      );
+
+      setAssignmentHistory((prev) => [...newHistoryRows, ...prev].slice(0, 10));
       Notify.success("Courses assigned successfully to selected users.");
       setSelectedUsers([]);
       setSelectedCourses([]);
@@ -144,11 +238,77 @@ const OrgDashboard: React.FC = () => {
 
   const hasSelection = selectedUsers.length > 0 && selectedCourses.length > 0;
 
+  // Mutation for removing a course from a user
+  const removeCourseMutation = useMutation({
+    mutationFn: ({ userGuid, courseGuid }: { userGuid: string; courseGuid: string }) =>
+      organizationApi.removeCourseFromUser(userGuid, courseGuid),
+    onSuccess: (_, variables) => {
+      // Remove from history
+      setAssignmentHistory((prev) =>
+        prev.filter((item) => !(item.id.startsWith(variables.userGuid) && item.id.includes(variables.courseGuid)))
+      );
+      Notify.success("Course removed successfully.");
+    },
+    onError: () => {
+      Notify.failure("Failed to remove course. Please try again.");
+    },
+  });
+
+  // Mutation for adding a course to a user
+  const addCourseMutation = useMutation({
+    mutationFn: ({ userGuid, courseGuid, courseName, userName }: { userGuid: string; courseGuid: string; courseName: string; userName: string }) =>
+      organizationApi.assignCourseToUser(userGuid, courseGuid).then(() => ({ userGuid, courseGuid, courseName, userName })),
+    onSuccess: (data) => {
+      // Add to history
+      const newItem: AssignmentHistoryItem = {
+        id: `${data.userGuid}-${data.courseGuid}-${new Date().toISOString()}`,
+        userGuid: data.userGuid,
+        userName: data.userName,
+        courseTitle: data.courseName,
+        assignedAt: new Date().toISOString(),
+        mode: "user-first",
+      };
+      setAssignmentHistory((prev) => [newItem, ...prev]);
+      setAddCourseDialog({ open: false, userGuid: null, userName: null });
+      setSelectedCourseToAdd(null);
+      Notify.success("Course added successfully.");
+    },
+    onError: () => {
+      Notify.failure("Failed to add course. Please try again.");
+    },
+  });
+
+  const handleRemoveCourse = (historyItem: AssignmentHistoryItem) => {
+    if (window.confirm(`Remove "${historyItem.courseTitle}" from ${historyItem.userName}?`)) {
+      removeCourseMutation.mutate({ userGuid: historyItem.userGuid, courseGuid: historyItem.id.split("-")[1] });
+    }
+  };
+
+  const handleOpenAddCourseDialog = (userGuid: string, userName: string) => {
+    setAddCourseDialog({ open: true, userGuid, userName });
+    setSelectedCourseToAdd(null);
+  };
+
+  const handleAddCourseConfirm = () => {
+    if (!selectedCourseToAdd || !addCourseDialog.userGuid || !addCourseDialog.userName) {
+      Notify.warning("Please select a course.");
+      return;
+    }
+    addCourseMutation.mutate({
+      userGuid: addCourseDialog.userGuid,
+      courseGuid: selectedCourseToAdd.guid,
+      courseName: selectedCourseToAdd.title,
+      userName: addCourseDialog.userName,
+    });
+  };
+
   const handleAssignCourses = () => {
     if (!hasSelection) return;
     assignMutation.mutate({
       userGuids: selectedUsers.map((user) => user.guid),
       courseGuids: selectedCourses.map((course) => course.guid),
+      selectedUsers,
+      selectedCourses,
     });
   };
 
@@ -181,7 +341,11 @@ const OrgDashboard: React.FC = () => {
             Welcome back, Admin!
           </Typography>
           <Typography variant="body1" color="text.secondary" fontWeight={500}>
-            Here is the learning and member overview for <strong style={{ color: theme.palette.primary.main }}>{orgName}</strong>.
+            Here is the learning and member overview for{" "}
+            <Box component="span" sx={{ color: theme.palette.primary.main, fontWeight: 700 }}>
+              {orgName}
+            </Box>
+            .
           </Typography>
         </Box>
         <Stack direction="row" spacing={2}>
@@ -547,6 +711,146 @@ const OrgDashboard: React.FC = () => {
           </Paper>
         </Grid>
       </Grid>
+
+      <Grid container spacing={4}>
+        <Grid item xs={12}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              borderRadius: 4,
+              border: "1px solid",
+              borderColor: "divider",
+            }}
+          >
+            <Stack spacing={2}>
+              <Box display="flex" justifyContent="space-between" alignItems="center">
+                <Box>
+                  <Typography variant="h6" fontWeight={700}>
+                    Recent Assignment History
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Latest course enrollments made from the org admin dashboard.
+                  </Typography>
+                </Box>
+                <Chip
+                  size="small"
+                  variant="outlined"
+                  label={`${(assignmentHistory.length > 0 ? assignmentHistory : recentHistorySeed).length} recent record(s)`}
+                />
+              </Box>
+
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>User</TableCell>
+                      <TableCell>Course</TableCell>
+                      <TableCell>Assigned At</TableCell>
+                      <TableCell>Mode</TableCell>
+                      <TableCell sx={{ textAlign: "center" }}>Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {(assignmentHistory.length > 0 ? assignmentHistory : recentHistorySeed).map((historyRow) => (
+                      <TableRow key={historyRow.id} hover>
+                        <TableCell sx={{ fontWeight: 600 }}>{historyRow.userName}</TableCell>
+                        <TableCell>{historyRow.courseTitle}</TableCell>
+                        <TableCell>{new Date(historyRow.assignedAt).toLocaleString()}</TableCell>
+                        <TableCell>
+                          <Chip
+                            size="small"
+                            variant="outlined"
+                            color={historyRow.mode === "user-first" ? "primary" : "secondary"}
+                            label={historyRow.mode === "user-first" ? "User(s) -> Course(s)" : "Course(s) -> User(s)"}
+                          />
+                        </TableCell>
+                        <TableCell sx={{ textAlign: "center" }}>
+                          <Stack direction="row" spacing={1} justifyContent="center">
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => handleRemoveCourse(historyRow)}
+                              disabled={removeCourseMutation.isPending}
+                              title="Remove course"
+                            >
+                              <Trash2 size={16} />
+                            </IconButton>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              startIcon={<Plus size={14} />}
+                              onClick={() => handleOpenAddCourseDialog(historyRow.userGuid, historyRow.userName)}
+                              disabled={addCourseMutation.isPending}
+                              sx={{ textTransform: "none" }}
+                            >
+                              Add
+                            </Button>
+                          </Stack>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {(assignmentHistory.length > 0 ? assignmentHistory : recentHistorySeed).length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={5}>
+                          <Typography variant="body2" color="text.secondary">
+                            No assignments yet. Assign courses above to populate history.
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Stack>
+          </Paper>
+        </Grid>
+      </Grid>
+
+      {/* Add Course Dialog */}
+      <Dialog
+        open={addCourseDialog.open}
+        onClose={() => setAddCourseDialog({ open: false, userGuid: null, userName: null })}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          Add Course to {addCourseDialog.userName}
+        </DialogTitle>
+        <DialogContent sx={{ pt: 2 }}>
+          <Autocomplete
+            options={courses}
+            getOptionLabel={(option) => option.title}
+            value={selectedCourseToAdd}
+            onChange={(_, value) => setSelectedCourseToAdd(value)}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Select Course"
+                placeholder="Choose a course to add"
+                fullWidth
+              />
+            )}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setAddCourseDialog({ open: false, userGuid: null, userName: null });
+              setSelectedCourseToAdd(null);
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleAddCourseConfirm}
+            disabled={!selectedCourseToAdd || addCourseMutation.isPending}
+          >
+            {addCourseMutation.isPending ? "Adding..." : "Add Course"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Stack>
   );
 };

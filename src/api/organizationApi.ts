@@ -4,7 +4,7 @@ import {
     UpdateOrganizationUserPayload, 
     OrganizationUser 
 } from "@/types/organization.types";
-import { TCoursePrviewDetails } from "@/types/course.types";
+import { TCoursePrviewDetails, TEnrolledCourse } from "@/types/course.types";
 
 export const organizationApi = {
     getOrganizationUsers: async () => {
@@ -17,17 +17,27 @@ export const organizationApi = {
         return response || [];
     },
 
-    assignCoursesToUsers: async (userGuids: string[], courseGuids: string[]) => {
-        const enrollments = userGuids.flatMap((userGuid) =>
-            courseGuids.map((courseGuid) =>
-                apiClient.post(`/main/v1/enroll/`, {
-                    course: courseGuid,
-                    user: userGuid,
-                })
-            )
-        );
+    getUserEnrolledCourses: async (userGuid: string) => {
+        const response = await apiClient.get<TEnrolledCourse[]>(`/main/v1/users/${userGuid}/courses/`);
+        return response || [];
+    },
 
-        return await Promise.all(enrollments);
+    assignCoursesToUsers: async (userGuids: string[], courseGuids: string[]) => {
+        return await apiClient.post("/main/v1/organization/enrollments/bulk/", {
+            user_guids: userGuids,
+            course_guids: courseGuids,
+        });
+    },
+
+    assignCourseToUser: async (userGuid: string, courseGuid: string) => {
+        return await apiClient.post("/main/v1/enroll/", {
+            user: userGuid,
+            course: courseGuid,
+        });
+    },
+
+    removeCourseFromUser: async (userGuid: string, courseGuid: string) => {
+        return await apiClient.delete(`/main/v1/enrollments/${userGuid}/${courseGuid}/`);
     },
 
     createOrganizationUser: async (data: CreateOrganizationUserPayload) => {
