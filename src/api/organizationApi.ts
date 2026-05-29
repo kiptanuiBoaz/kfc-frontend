@@ -30,14 +30,18 @@ export const organizationApi = {
     },
 
     assignCourseToUser: async (userGuid: string, courseGuid: string) => {
-        return await apiClient.post("/main/v1/enroll/", {
-            user: userGuid,
-            course: courseGuid,
+        return await apiClient.post("/main/v1/organization/enrollments/bulk/", {
+            user_guids: [userGuid],
+            course_guids: [courseGuid],
         });
     },
 
     removeCourseFromUser: async (userGuid: string, courseGuid: string) => {
-        return await apiClient.delete(`/main/v1/enrollments/${userGuid}/${courseGuid}/`);
+        return await apiClient.delete(`/main/v1/unenroll/${courseGuid}/`, {
+            data: {
+                user_guid: userGuid,
+            },
+        });
     },
 
     createOrganizationUser: async (data: CreateOrganizationUserPayload) => {
@@ -51,5 +55,9 @@ export const organizationApi = {
 
     toggleUserStatus: async (guid: string, is_active: boolean) => {
         return await apiClient.patch<OrganizationUser>(`/main/v1/user/update/${guid}/`, { is_active });
+    },
+
+    deleteUser: async (guid: string) => {
+        return await apiClient.delete(`/main/v1/user/delete/${guid}/`);
     },
 };

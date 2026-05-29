@@ -19,8 +19,13 @@ import {
   Tooltip,
   CircularProgress,
   Alert,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
 } from "@mui/material";
-import { Plus, Search, Edit2, UserCheck, UserX, Mail } from "lucide-react";
+import { Plus, Search, Edit2, UserCheck, UserX, Mail, Trash2 } from "lucide-react";
 import { useUser } from "@/hooks/useAuth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
@@ -83,6 +88,8 @@ const OrgUsers: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<OrganizationUser | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<OrganizationUser | null>(null);
 
   const location = useLocation();
 
@@ -205,6 +212,32 @@ const OrgUsers: React.FC = () => {
     },
   });
 
+  // Delete user mutation
+  const deleteUserMutation = useMutation({
+    mutationFn: (guid: string) => {
+      if (guid.startsWith("dummy-")) {
+        return Promise.resolve(guid);
+      }
+      return organizationApi.deleteUser(guid);
+    },
+    onSuccess: (_, variables) => {
+      Notify.success("User deleted successfully");
+      if (variables.startsWith("dummy-")) {
+        queryClient.setQueryData(["orgUsers"], (old: any) => {
+          const list = Array.isArray(old) && old.length > 0 ? old : [...DUMMY_ORG_USERS];
+          return list.filter((u: any) => u.guid !== variables);
+        });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["orgUsers"] });
+      }
+      setDeleteDialogOpen(false);
+      setUserToDelete(null);
+    },
+    onError: (error: any) => {
+      Notify.failure(error?.response?.data?.message || "Failed to delete user");
+    },
+  });
+
   const handleCreateUser = async (values: any) => {
     const payload = {
       ...values,
@@ -228,6 +261,17 @@ const OrgUsers: React.FC = () => {
 
   const handleToggleStatus = (user: OrganizationUser) => {
     toggleStatusMutation.mutate({ guid: user.guid, is_active: !user.is_active });
+  };
+
+  const openDeleteDialog = (user: OrganizationUser) => {
+    setUserToDelete(user);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteUser = async () => {
+    if (userToDelete) {
+      await deleteUserMutation.mutateAsync(userToDelete.guid);
+    }
   };
 
   const openCreateModal = () => {
@@ -395,6 +439,16 @@ const OrgUsers: React.FC = () => {
                             <Edit2 size={18} />
                           </IconButton>
                         </Tooltip>
+                        <Tooltip title="Delete User">
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => openDeleteDialog(orgUser)}
+                            disabled={deleteUserMutation.isPending}
+                          >
+                            <Trash2 size={18} />
+                          </IconButton>
+                        </Tooltip>
                         <Tooltip title="Send Email">
                           <IconButton size="small">
                             <Mail size={18} />
@@ -426,6 +480,37 @@ const OrgUsers: React.FC = () => {
         user={selectedUser}
         isLoading={createMutation.isPending || updateMutation.isPending}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        PaperProps={{
+          sx: { borderRadius: 3 },
+        }}
+      >
+        <DialogTitle>Delete User</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete{" "}
+            <strong>
+              {userToDelete?.first_name} {userToDelete?.last_name}
+            </strong>
+            ? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={handleDeleteUser}
+            color="error"
+            variant="contained"
+            disabled={deleteUserMutation.isPending}
+          >
+            {deleteUserMutation.isPending ? "Deleting..." : "Delete"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

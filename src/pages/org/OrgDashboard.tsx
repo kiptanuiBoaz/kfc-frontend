@@ -10,6 +10,7 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
+  DialogContentText,
   DialogTitle,
   Divider,
   Grid,
@@ -45,11 +46,12 @@ import {
 import { AnalyticsCard } from "@/components/shared/AnalyticsCard";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/hooks/useAuth";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { organizationApi } from "@/api/organizationApi";
 import { OrganizationUser } from "@/types/organization.types";
-import { TCoursePrviewDetails } from "@/types/course.types";
+import { TCoursePrviewDetails, TEnrolledCourse } from "@/types/course.types";
 import { Notify } from "notiflix";
+import { isCourseEnrolled } from "@/utils/isCourseEnrolled";
 
 const DUMMY_ORG_USERS: OrganizationUser[] = [
   {
@@ -100,6 +102,7 @@ type AssignmentHistoryItem = {
   id: string;
   userGuid: string;
   userName: string;
+  courseGuid: string;
   courseTitle: string;
   assignedAt: string;
   mode: "user-first" | "course-first";
@@ -109,13 +112,14 @@ type AssignCoursesPayload = {
   userGuids: string[];
   courseGuids: string[];
   selectedUsers: OrganizationUser[];
-  selectedCourses: TCoursePrviewDetails[];
+  selectedCourse?: TCoursePrviewDetails | null;
 };
 
 const OrgDashboard: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const user = useUser();
+  const queryClient = useQueryClient();
   const orgName = user?.organization?.org_name || "KFC Kenya";
   const orgGuid = user?.organization?.guid || "";
   const usersPath = `/org/${orgGuid}/users`;
@@ -140,7 +144,7 @@ const OrgDashboard: React.FC = () => {
   const inactiveCount = displayUsers.filter((u) => !u.is_active).length;
 
   const [selectedUsers, setSelectedUsers] = useState<OrganizationUser[]>([]);
-  const [selectedCourses, setSelectedCourses] = useState<TCoursePrviewDetails[]>([]);
+  const [selectedCourse, setSelectedCourse] = useState<TCoursePrviewDetails | null>(null);
   const [assignmentMode, setAssignmentMode] = useState<"user-first" | "course-first">(
     "user-first"
   );
@@ -159,6 +163,31 @@ const OrgDashboard: React.FC = () => {
     localStorage.setItem("orgDashboardAssignmentHistory", JSON.stringify(assignmentHistory));
   }, [assignmentHistory]);
 
+  // Fetch enrolled courses for selected users when they change
+  useEffect(() => {
+    const fetchEnrolledCourses = async () => {
+      const enrolledCoursesMap: Record<string, TEnrolledCourse[]> = {};
+      
+      for (const user of selectedUsers) {
+        try {
+          const enrolled = await organizationApi.getUserEnrolledCourses(user.guid);
+          enrolledCoursesMap[user.guid] = enrolled;
+        } catch (error) {
+          console.error(`Failed to fetch enrolled courses for user ${user.guid}:`, error);
+          enrolledCoursesMap[user.guid] = [];
+        }
+      }
+      
+      setSelectedUsersEnrolledCourses(enrolledCoursesMap);
+    };
+
+    if (selectedUsers.length > 0) {
+      fetchEnrolledCourses();
+    } else {
+      setSelectedUsersEnrolledCourses({});
+    }
+  }, [selectedUsers]);
+
   // State for Add Course dialog
   const [addCourseDialog, setAddCourseDialog] = useState<{
     open: boolean;
@@ -170,6 +199,11 @@ const OrgDashboard: React.FC = () => {
     userName: null,
   });
   const [selectedCourseToAdd, setSelectedCourseToAdd] = useState<TCoursePrviewDetails | null>(null);
+  const [userEnrolledCourses, setUserEnrolledCourses] = useState<TEnrolledCourse[]>([]);
+  const [selectedUsersEnrolledCourses, setSelectedUsersEnrolledCourses] = useState<Record<string, TEnrolledCourse[]>>({});
+  const [deleteUserDialogOpen, setDeleteUserDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<OrganizationUser | null>(null);
+  const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
 
   const recentHistorySeed = useMemo<AssignmentHistoryItem[]>(() => {
     const seedUsers = displayUsers.slice(0, 2);
@@ -181,6 +215,7 @@ const OrgDashboard: React.FC = () => {
         id: `seed-${seedUser.guid}-${seedCourse.guid}-${innerIndex}`,
         userGuid: seedUser.guid,
         userName: `${seedUser.first_name} ${seedUser.last_name}`,
+        courseGuid: seedCourse.guid,
         courseTitle: seedCourse.title,
         assignedAt: new Date(Date.now() - (index + 1) * 60 * 60 * 1000).toISOString(),
         mode: "user-first",
@@ -188,17 +223,43 @@ const OrgDashboard: React.FC = () => {
     );
   }, [courses, displayUsers]);
 
+  // Filter courses to include those that at least one selected user does not already have
+  const availableCoursesForSelection = useMemo(() => {
+    if (selectedUsers.length === 0) return courses;
+
+    return courses.filter((course) =>
+      selectedUsers.some((user) =>
+        !(selectedUsersEnrolledCourses[user.guid] || []).some((enrolledCourse) => enrolledCourse.guid === course.guid)
+      )
+    );
+  }, [courses, selectedUsers, selectedUsersEnrolledCourses]);
+
+  // Group assignment history by user
+  const groupedAssignmentHistory = useMemo(() => {
+    const history = assignmentHistory.length > 0 ? assignmentHistory : recentHistorySeed;
+    const grouped = new Map<string, { user: AssignmentHistoryItem; courses: AssignmentHistoryItem[] }>();
+
+    history.forEach((item) => {
+      if (!grouped.has(item.userGuid)) {
+        grouped.set(item.userGuid, { user: item, courses: [] });
+      }
+      grouped.get(item.userGuid)!.courses.push(item);
+    });
+
+    return Array.from(grouped.values());
+  }, [assignmentHistory, recentHistorySeed]);
+
   const selectedModeText = useMemo(() => {
-    if (selectedUsers.length === 0 && selectedCourses.length === 0) {
-      return "Choose one or more users and courses to assign.";
+    if (selectedUsers.length === 0 && !selectedCourse) {
+      return "Choose one or more users and a course to assign.";
     }
-    if (selectedUsers.length > 0 && selectedCourses.length > 0) {
-      return `Assigning ${selectedCourses.length} course(s) to ${selectedUsers.length} user(s).`;
+    if (selectedUsers.length > 0 && selectedCourse) {
+      return `Assigning 1 course to ${selectedUsers.length} user(s).`;
     }
     return assignmentMode === "user-first"
-      ? `Selected ${selectedUsers.length} user(s). Now choose course(s).`
-      : `Selected ${selectedCourses.length} course(s). Now choose user(s).`;
-  }, [assignmentMode, selectedCourses.length, selectedUsers.length]);
+      ? `Selected ${selectedUsers.length} user(s). Now choose a course.`
+      : `Selected a course. Now choose user(s).`;
+  }, [assignmentMode, selectedCourse, selectedUsers.length]);
 
   const assignMutation = useMutation({
     mutationFn: ({ userGuids, courseGuids }: AssignCoursesPayload) =>
@@ -210,47 +271,67 @@ const OrgDashboard: React.FC = () => {
           `${selectedUser.first_name} ${selectedUser.last_name}`,
         ])
       );
-      const selectedCourseMap = new Map(
-        variables.selectedCourses.map((selectedCourse) => [selectedCourse.guid, selectedCourse.title])
-      );
+      const selectedCourseMap = new Map([
+        [variables.selectedCourse?.guid, variables.selectedCourse?.title],
+      ] as [string | undefined, string | undefined][]);
       const assignedAt = new Date().toISOString();
 
-      const newHistoryRows: AssignmentHistoryItem[] = variables.userGuids.flatMap((userGuid) =>
-        variables.courseGuids.map((courseGuid) => ({
-          id: `${userGuid}-${courseGuid}-${assignedAt}`,
-          userGuid,
-          userName: selectedUserMap.get(userGuid) || userGuid,
-          courseTitle: selectedCourseMap.get(courseGuid) || courseGuid,
-          assignedAt,
-          mode: assignmentMode,
-        }))
-      );
+      const newHistoryRows: AssignmentHistoryItem[] = variables.userGuids.flatMap((userGuid) => {
+        const courseGuid = variables.courseGuids[0];
+        return [
+          {
+            id: `${userGuid}-${courseGuid}-${assignedAt}`,
+            userGuid,
+            userName: selectedUserMap.get(userGuid) || userGuid,
+            courseGuid,
+            courseTitle: selectedCourseMap.get(courseGuid) || courseGuid,
+            assignedAt,
+            mode: assignmentMode,
+          },
+        ];
+      });
 
       setAssignmentHistory((prev) => [...newHistoryRows, ...prev].slice(0, 10));
-      Notify.success("Courses assigned successfully to selected users.");
+      Notify.success("Course assigned successfully to selected users.");
       setSelectedUsers([]);
-      setSelectedCourses([]);
+      setSelectedCourse(null);
     },
-    onError: () => {
-      Notify.failure("Unable to assign courses. Please try again later.");
+    onError: (error: any) => {
+      // Check if the error is about already enrolled courses
+      if (error?.response?.data?.message?.includes("Already enrolled") || 
+          error?.message?.includes("Already enrolled")) {
+        Notify.warning("One or more courses are already assigned to selected users.");
+      } else {
+        Notify.failure("Unable to assign courses. Please try again later.");
+      }
     },
   });
 
-  const hasSelection = selectedUsers.length > 0 && selectedCourses.length > 0;
+  const hasSelection = selectedUsers.length > 0 && Boolean(selectedCourse);
 
   // Mutation for removing a course from a user
   const removeCourseMutation = useMutation({
     mutationFn: ({ userGuid, courseGuid }: { userGuid: string; courseGuid: string }) =>
       organizationApi.removeCourseFromUser(userGuid, courseGuid),
     onSuccess: (_, variables) => {
-      // Remove from history
+      // Remove from history using courseGuid for exact matching
       setAssignmentHistory((prev) =>
-        prev.filter((item) => !(item.id.startsWith(variables.userGuid) && item.id.includes(variables.courseGuid)))
+        prev.filter((item) => item.courseGuid !== variables.courseGuid || item.userGuid !== variables.userGuid)
       );
       Notify.success("Course removed successfully.");
     },
-    onError: () => {
-      Notify.failure("Failed to remove course. Please try again.");
+    onError: (error: any, variables) => {
+      console.error("Remove course error:", error);
+      // If the enrollment doesn't exist, still remove it from history since it's already not enrolled
+      if (error?.response?.data?.data?.includes("No UsersCourseEnrollment matches the given query") ||
+          error?.response?.data?.message?.includes("Unenrollment failed")) {
+        setAssignmentHistory((prev) =>
+          prev.filter((item) => item.courseGuid !== variables.courseGuid || item.userGuid !== variables.userGuid)
+        );
+        Notify.info("Course enrollment not found in system. Removed from history.");
+      } else {
+        Notify.failure("Failed to remove course. Please try again.");
+      }
     },
   });
 
@@ -264,6 +345,7 @@ const OrgDashboard: React.FC = () => {
         id: `${data.userGuid}-${data.courseGuid}-${new Date().toISOString()}`,
         userGuid: data.userGuid,
         userName: data.userName,
+        courseGuid: data.courseGuid,
         courseTitle: data.courseName,
         assignedAt: new Date().toISOString(),
         mode: "user-first",
@@ -271,22 +353,75 @@ const OrgDashboard: React.FC = () => {
       setAssignmentHistory((prev) => [newItem, ...prev]);
       setAddCourseDialog({ open: false, userGuid: null, userName: null });
       setSelectedCourseToAdd(null);
+      setUserEnrolledCourses([]);
       Notify.success("Course added successfully.");
     },
-    onError: () => {
-      Notify.failure("Failed to add course. Please try again.");
+    onError: (error: any) => {
+      // Check if the error is about already enrolled courses
+      if (error?.response?.data?.message?.includes("Already enrolled") || 
+          error?.message?.includes("Already enrolled") ||
+          error?.response?.data?.data?.includes("Already enrolled")) {
+        Notify.warning("This course is already assigned to the user.");
+      } else {
+        Notify.failure("Failed to add course. Please try again.");
+      }
     },
   });
 
   const handleRemoveCourse = (historyItem: AssignmentHistoryItem) => {
     if (window.confirm(`Remove "${historyItem.courseTitle}" from ${historyItem.userName}?`)) {
-      removeCourseMutation.mutate({ userGuid: historyItem.userGuid, courseGuid: historyItem.id.split("-")[1] });
+      removeCourseMutation.mutate({ userGuid: historyItem.userGuid, courseGuid: historyItem.courseGuid });
     }
   };
 
-  const handleOpenAddCourseDialog = (userGuid: string, userName: string) => {
+  // Mutation for deleting a user
+  const deleteUserMutation = useMutation({
+    mutationFn: (guid: string) => organizationApi.deleteUser(guid),
+    onSuccess: () => {
+      Notify.success("User deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["orgUsers"] });
+      setDeleteUserDialogOpen(false);
+      setUserToDelete(null);
+    },
+    onError: (error: any) => {
+      Notify.failure(error?.response?.data?.message || "Failed to delete user");
+    },
+  });
+
+  const handleDeleteUser = () => {
+    if (userToDelete) {
+      deleteUserMutation.mutate(userToDelete.guid);
+    }
+  };
+
+  const openDeleteUserDialog = (user: OrganizationUser) => {
+    setUserToDelete(user);
+    setDeleteUserDialogOpen(true);
+  };
+
+  const toggleUserExpansion = (userGuid: string) => {
+    setExpandedUsers((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(userGuid)) {
+        newSet.delete(userGuid);
+      } else {
+        newSet.add(userGuid);
+      }
+      return newSet;
+    });
+  };
+
+  const handleOpenAddCourseDialog = async (userGuid: string, userName: string) => {
     setAddCourseDialog({ open: true, userGuid, userName });
     setSelectedCourseToAdd(null);
+    // Fetch user's enrolled courses to filter them out
+    try {
+      const enrolled = await organizationApi.getUserEnrolledCourses(userGuid);
+      setUserEnrolledCourses(enrolled);
+    } catch (error) {
+      console.error("Failed to fetch enrolled courses:", error);
+      setUserEnrolledCourses([]);
+    }
   };
 
   const handleAddCourseConfirm = () => {
@@ -294,6 +429,13 @@ const OrgDashboard: React.FC = () => {
       Notify.warning("Please select a course.");
       return;
     }
+    
+    // Double-check if course is already enrolled before making API call
+    if (isCourseEnrolled(userEnrolledCourses, selectedCourseToAdd.guid)) {
+      Notify.warning("This course is already assigned to the user.");
+      return;
+    }
+    
     addCourseMutation.mutate({
       userGuid: addCourseDialog.userGuid,
       courseGuid: selectedCourseToAdd.guid,
@@ -303,12 +445,22 @@ const OrgDashboard: React.FC = () => {
   };
 
   const handleAssignCourses = () => {
-    if (!hasSelection) return;
+    if (!hasSelection || !selectedCourse) return;
+
+    const usersToAssign = selectedUsers.filter(
+      (user) => !isCourseEnrolled(selectedUsersEnrolledCourses[user.guid] || [], selectedCourse.guid)
+    );
+
+    if (usersToAssign.length === 0) {
+      Notify.warning("All selected users already have this course.");
+      return;
+    }
+
     assignMutation.mutate({
-      userGuids: selectedUsers.map((user) => user.guid),
-      courseGuids: selectedCourses.map((course) => course.guid),
-      selectedUsers,
-      selectedCourses,
+      userGuids: usersToAssign.map((user) => user.guid),
+      courseGuids: [selectedCourse.guid],
+      selectedUsers: usersToAssign,
+      selectedCourse,
     });
   };
 
@@ -508,12 +660,23 @@ const OrgDashboard: React.FC = () => {
                   key={orgUser.guid}
                   disableGutters
                   secondaryAction={
-                    <Chip
-                      size="small"
-                      label={orgUser.is_active ? "Active" : "Inactive"}
-                      color={orgUser.is_active ? "success" : "default"}
-                      variant={orgUser.is_active ? "filled" : "outlined"}
-                    />
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Chip
+                        size="small"
+                        label={orgUser.is_active ? "Active" : "Inactive"}
+                        color={orgUser.is_active ? "success" : "default"}
+                        variant={orgUser.is_active ? "filled" : "outlined"}
+                      />
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => openDeleteUserDialog(orgUser)}
+                        disabled={deleteUserMutation.isPending}
+                        title="Delete user"
+                      >
+                        <Trash2 size={16} />
+                      </IconButton>
+                    </Stack>
                   }
                 >
                   <ListItemAvatar>
@@ -635,43 +798,35 @@ const OrgDashboard: React.FC = () => {
 
                 <Grid item xs={12} md={6}>
                   <Autocomplete
-                    multiple
-                    disableCloseOnSelect
-                    options={courses}
-                    value={selectedCourses}
+                    options={availableCoursesForSelection}
+                    value={selectedCourse}
                     getOptionLabel={(option) => option.title}
                     isOptionEqualToValue={(option, value) => option.guid === value.guid}
-                    onChange={(_, value) => setSelectedCourses(value)}
+                    onChange={(_, value) => setSelectedCourse(value)}
                     loading={coursesLoading}
                     noOptionsText={
                       coursesError
                         ? "Could not load courses from API."
+                        : selectedUsers.length > 0 && availableCoursesForSelection.length === 0
+                        ? "All courses are already assigned to selected users"
                         : "No courses available."
                     }
-                    renderOption={(props, option, { selected }) => (
-                      <li {...props}>
-                        <Checkbox
-                          style={{ marginRight: 8 }}
-                          checked={selected}
-                          size="small"
-                        />
-                        {option.title}
-                      </li>
-                    )}
                     renderInput={(params) => (
                       <TextField
                         {...params}
                         label={
                           assignmentMode === "user-first"
-                            ? "Select Courses (courses to assign)"
-                            : "Select Courses"
+                            ? "Select Course (course to assign)"
+                            : "Select Course"
                         }
                         placeholder={
                           assignmentMode === "user-first"
-                            ? "Choose one or more courses for selected users"
-                            : "Choose courses"
+                            ? "Choose a course for selected users"
+                            : "Choose a course"
                         }
-                        helperText="Pick one or more courses available in your org."
+                        helperText={selectedUsers.length > 0 
+                          ? "Choose a course that none of the selected users already have."
+                          : "Pick a course available in your org."}
                       />
                     )}
                   />
@@ -679,7 +834,7 @@ const OrgDashboard: React.FC = () => {
               </Grid>
 
               <Alert severity="info" iconMapping={{ info: <ShieldCheck size={18} /> }}>
-                Selected users will receive access to all selected courses through enrollment.
+                Selected users who do not already have the chosen course will be enrolled.
               </Alert>
 
               <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems="center">
@@ -690,21 +845,21 @@ const OrgDashboard: React.FC = () => {
                   disabled={!hasSelection || assignMutation.isPending}
                   sx={{ textTransform: "none", borderRadius: 2, fontWeight: 700 }}
                 >
-                  {assignMutation.isPending ? "Assigning..." : "Assign Courses"}
+                  {assignMutation.isPending ? "Assigning..." : "Assign Course"}
                 </Button>
                 <Button
                   variant="text"
                   color="inherit"
                   onClick={() => {
                     setSelectedUsers([]);
-                    setSelectedCourses([]);
+                    setSelectedCourse(null);
                   }}
                   sx={{ textTransform: "none", borderRadius: 2, fontWeight: 600 }}
                 >
                   Clear Selection
                 </Button>
                 <Typography variant="body2" color="text.secondary">
-                  {selectedUsers.length} user(s) selected · {selectedCourses.length} course(s) selected
+                  {selectedUsers.length} user(s) selected · {selectedCourse ? 1 : 0} course(s) selected
                 </Typography>
               </Stack>
             </Stack>
@@ -745,54 +900,79 @@ const OrgDashboard: React.FC = () => {
                   <TableHead>
                     <TableRow>
                       <TableCell>User</TableCell>
-                      <TableCell>Course</TableCell>
-                      <TableCell>Assigned At</TableCell>
-                      <TableCell>Mode</TableCell>
+                      <TableCell>Courses</TableCell>
                       <TableCell sx={{ textAlign: "center" }}>Actions</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {(assignmentHistory.length > 0 ? assignmentHistory : recentHistorySeed).map((historyRow) => (
-                      <TableRow key={historyRow.id} hover>
-                        <TableCell sx={{ fontWeight: 600 }}>{historyRow.userName}</TableCell>
-                        <TableCell>{historyRow.courseTitle}</TableCell>
-                        <TableCell>{new Date(historyRow.assignedAt).toLocaleString()}</TableCell>
-                        <TableCell>
-                          <Chip
-                            size="small"
-                            variant="outlined"
-                            color={historyRow.mode === "user-first" ? "primary" : "secondary"}
-                            label={historyRow.mode === "user-first" ? "User(s) -> Course(s)" : "Course(s) -> User(s)"}
-                          />
-                        </TableCell>
-                        <TableCell sx={{ textAlign: "center" }}>
-                          <Stack direction="row" spacing={1} justifyContent="center">
-                            <IconButton
-                              size="small"
-                              color="error"
-                              onClick={() => handleRemoveCourse(historyRow)}
-                              disabled={removeCourseMutation.isPending}
-                              title="Remove course"
-                            >
-                              <Trash2 size={16} />
-                            </IconButton>
-                            <Button
-                              size="small"
-                              variant="outlined"
-                              startIcon={<Plus size={14} />}
-                              onClick={() => handleOpenAddCourseDialog(historyRow.userGuid, historyRow.userName)}
-                              disabled={addCourseMutation.isPending}
-                              sx={{ textTransform: "none" }}
-                            >
-                              Add
-                            </Button>
-                          </Stack>
-                        </TableCell>
-                      </TableRow>
+                    {groupedAssignmentHistory.map(({ user, courses: userCourses }) => (
+                      <React.Fragment key={user.userGuid}>
+                        <TableRow hover>
+                          <TableCell sx={{ fontWeight: 600 }}>
+                            <Stack direction="row" spacing={1} alignItems="center">
+                              <IconButton
+                                size="small"
+                                onClick={() => toggleUserExpansion(user.userGuid)}
+                              >
+                                {expandedUsers.has(user.userGuid) ? <BookOpen size={16} /> : <BookOpen size={16} />}
+                              </IconButton>
+                              {user.userName}
+                            </Stack>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" color="text.secondary">
+                              {userCourses.length} course{userCourses.length !== 1 ? 's' : ''}
+                            </Typography>
+                          </TableCell>
+                          <TableCell sx={{ textAlign: "center" }}>
+                            <Stack direction="row" spacing={1} justifyContent="center">
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                startIcon={<Plus size={14} />}
+                                onClick={() => handleOpenAddCourseDialog(user.userGuid, user.userName)}
+                                disabled={addCourseMutation.isPending}
+                                sx={{ textTransform: "none" }}
+                              >
+                                Add Course
+                              </Button>
+                            </Stack>
+                          </TableCell>
+                        </TableRow>
+                        {expandedUsers.has(user.userGuid) && userCourses.map((course) => (
+                          <TableRow key={course.id} hover sx={{ bgcolor: "grey.50" }}>
+                            <TableCell sx={{ pl: 6 }}>
+                              <Typography variant="body2">{course.courseTitle}</Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {new Date(course.assignedAt).toLocaleString()}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Chip
+                                size="small"
+                                variant="outlined"
+                                color={course.mode === "user-first" ? "primary" : "secondary"}
+                                label={course.mode === "user-first" ? "User(s) -> Course(s)" : "Course(s) -> User(s)"}
+                              />
+                            </TableCell>
+                            <TableCell sx={{ textAlign: "center" }}>
+                              <IconButton
+                                size="small"
+                                color="error"
+                                onClick={() => handleRemoveCourse(course)}
+                                disabled={removeCourseMutation.isPending}
+                                title="Remove course"
+                              >
+                                <Trash2 size={16} />
+                              </IconButton>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </React.Fragment>
                     ))}
-                    {(assignmentHistory.length > 0 ? assignmentHistory : recentHistorySeed).length === 0 && (
+                    {groupedAssignmentHistory.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={5}>
+                        <TableCell colSpan={3}>
                           <Typography variant="body2" color="text.secondary">
                             No assignments yet. Assign courses above to populate history.
                           </Typography>
@@ -819,10 +999,13 @@ const OrgDashboard: React.FC = () => {
         </DialogTitle>
         <DialogContent sx={{ pt: 2 }}>
           <Autocomplete
-            options={courses}
+            options={courses.filter(course => !isCourseEnrolled(userEnrolledCourses, course.guid))}
             getOptionLabel={(option) => option.title}
             value={selectedCourseToAdd}
             onChange={(_, value) => setSelectedCourseToAdd(value)}
+            noOptionsText={courses.filter(course => !isCourseEnrolled(userEnrolledCourses, course.guid)).length === 0 
+              ? "All courses are already assigned to this user" 
+              : "No courses available"}
             renderInput={(params) => (
               <TextField
                 {...params}
@@ -848,6 +1031,37 @@ const OrgDashboard: React.FC = () => {
             disabled={!selectedCourseToAdd || addCourseMutation.isPending}
           >
             {addCourseMutation.isPending ? "Adding..." : "Add Course"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete User Confirmation Dialog */}
+      <Dialog
+        open={deleteUserDialogOpen}
+        onClose={() => setDeleteUserDialogOpen(false)}
+        PaperProps={{
+          sx: { borderRadius: 3 },
+        }}
+      >
+        <DialogTitle>Delete User</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete{" "}
+            <strong>
+              {userToDelete?.first_name} {userToDelete?.last_name}
+            </strong>
+            ? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteUserDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={handleDeleteUser}
+            color="error"
+            variant="contained"
+            disabled={deleteUserMutation.isPending}
+          >
+            {deleteUserMutation.isPending ? "Deleting..." : "Delete"}
           </Button>
         </DialogActions>
       </Dialog>
