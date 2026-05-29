@@ -157,6 +157,7 @@ const OrgDashboard: React.FC = () => {
       return [];
     }
   });
+  const [hadHistoryInteraction, setHadHistoryInteraction] = useState(false);
 
   // Persist assignment history to localStorage whenever it changes
   useEffect(() => {
@@ -236,7 +237,11 @@ const OrgDashboard: React.FC = () => {
 
   // Group assignment history by user
   const groupedAssignmentHistory = useMemo(() => {
-    const history = assignmentHistory.length > 0 ? assignmentHistory : recentHistorySeed;
+    const history = hadHistoryInteraction
+      ? assignmentHistory
+      : assignmentHistory.length > 0
+      ? assignmentHistory
+      : recentHistorySeed;
     const grouped = new Map<string, { user: AssignmentHistoryItem; courses: AssignmentHistoryItem[] }>();
 
     history.forEach((item) => {
@@ -246,8 +251,8 @@ const OrgDashboard: React.FC = () => {
       grouped.get(item.userGuid)!.courses.push(item);
     });
 
-    return Array.from(grouped.values());
-  }, [assignmentHistory, recentHistorySeed]);
+    return Array.from(grouped.values()).filter((group) => group.courses.length > 0);
+  }, [assignmentHistory, hadHistoryInteraction, recentHistorySeed]);
 
   const selectedModeText = useMemo(() => {
     if (selectedUsers.length === 0 && !selectedCourse) {
@@ -292,6 +297,7 @@ const OrgDashboard: React.FC = () => {
       });
 
       setAssignmentHistory((prev) => [...newHistoryRows, ...prev].slice(0, 10));
+      setHadHistoryInteraction(true);
       Notify.success("Course assigned successfully to selected users.");
       setSelectedUsers([]);
       setSelectedCourse(null);
@@ -311,13 +317,27 @@ const OrgDashboard: React.FC = () => {
 
   // Mutation for removing a course from a user
   const removeCourseMutation = useMutation({
-    mutationFn: ({ userGuid, courseGuid }: { userGuid: string; courseGuid: string }) =>
-      organizationApi.removeCourseFromUser(userGuid, courseGuid),
+    mutationFn: async ({ userGuid, courseGuid }: { userGuid: string; courseGuid: string }) => {
+      // If removing the currently authenticated user's enrollment, use the per-user unenroll endpoint
+      try {
+        if (user?.guid && userGuid === user.guid) {
+          await organizationApi.unenrollCurrentUser(courseGuid);
+        } else {
+          // For other users, call the bulk unenroll endpoint
+          await organizationApi.removeCourseFromUser([userGuid], [courseGuid]);
+        }
+        return { userGuid, courseGuid };
+      } catch (err) {
+        // rethrow to reach onError handler
+        throw err;
+      }
+    },
     onSuccess: (_, variables) => {
       // Remove from history using courseGuid for exact matching
       setAssignmentHistory((prev) =>
         prev.filter((item) => item.courseGuid !== variables.courseGuid || item.userGuid !== variables.userGuid)
       );
+      setHadHistoryInteraction(true);
       Notify.success("Course removed successfully.");
     },
     onError: (error: any, variables) => {
@@ -328,6 +348,7 @@ const OrgDashboard: React.FC = () => {
         setAssignmentHistory((prev) =>
           prev.filter((item) => item.courseGuid !== variables.courseGuid || item.userGuid !== variables.userGuid)
         );
+        setHadHistoryInteraction(true);
         Notify.info("Course enrollment not found in system. Removed from history.");
       } else {
         Notify.failure("Failed to remove course. Please try again.");
@@ -368,10 +389,27 @@ const OrgDashboard: React.FC = () => {
     },
   });
 
-  const handleRemoveCourse = (historyItem: AssignmentHistoryItem) => {
-    if (window.confirm(`Remove "${historyItem.courseTitle}" from ${historyItem.userName}?`)) {
-      removeCourseMutation.mutate({ userGuid: historyItem.userGuid, courseGuid: historyItem.courseGuid });
+  const handleRemoveCourse = async (historyItem: AssignmentHistoryItem) => {
+    if (!window.confirm(`Remove "${historyItem.courseTitle}" from ${historyItem.userName}?`)) {
+      return;
     }
+
+    try {
+      const enrolled = await organizationApi.getUserEnrolledCourses(historyItem.userGuid);
+      if (!isCourseEnrolled(enrolled, historyItem.courseGuid)) {
+        setAssignmentHistory((prev) =>
+          prev.filter((item) => item.courseGuid !== historyItem.courseGuid || item.userGuid !== historyItem.userGuid)
+        );
+        setHadHistoryInteraction(true);
+        Notify.info("This course is no longer enrolled for the user, so it was removed from history.");
+        return;
+      }
+    } catch (error) {
+      console.error("Failed to verify enrollment before removal:", error);
+      // Fall through to attempt deletion anyway.
+    }
+
+    removeCourseMutation.mutate({ userGuid: historyItem.userGuid, courseGuid: historyItem.courseGuid });
   };
 
   // Mutation for deleting a user
@@ -891,7 +929,7 @@ const OrgDashboard: React.FC = () => {
                 <Chip
                   size="small"
                   variant="outlined"
-                  label={`${(assignmentHistory.length > 0 ? assignmentHistory : recentHistorySeed).length} recent record(s)`}
+                  label={`${assignmentHistory.length} recent record(s)`}
                 />
               </Box>
 
