@@ -14,8 +14,8 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "preserve",
     "ignoreDeprecations": "6.0",
+    "jsx": "preserve",
     "baseUrl": "src",
     "paths": {
       "@/*": ["*"],

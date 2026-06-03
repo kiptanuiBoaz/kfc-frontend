@@ -123,7 +123,8 @@ const InstructorCourses = () => {
 
   const deleteCourseMutation = useMutation({
     mutationFn: async (courseGuid: string) => {
-      return apiClient.delete(`/main/v1/courses/${courseGuid}/delete/`);
+      // Use the canonical REST DELETE path and a short timeout for fast failures
+      return apiClient.delete(`/main/v1/courses/${courseGuid}/`, { timeout: 2000 });
     },
     onSuccess: () => {
       Notify.success("Course deleted successfully");

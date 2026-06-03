@@ -95,12 +95,37 @@ export const organizationApi = {
 
     // Unenroll one or more users from one or more courses (bulk)
     removeCourseFromUser: async (userGuids: string[], courseGuids: string[]) => {
-        return await apiClient.delete(`/main/v1/organization/enrollments/bulk/`, {
-            data: {
+        try {
+            return await apiClient.post("/main/v1/organization/enrollments/bulk/remove/", {
                 user_guids: userGuids,
                 course_guids: courseGuids,
-            },
-        });
+            });
+        } catch (error: any) {
+            const status = error?.response?.status;
+            const detail = error?.response?.data?.detail || "";
+
+            // If the remove path doesn't exist, retry against the known bulk enroll endpoint
+            // with a removal action payload. This matches the only registered organizaton bulk route.
+            if (status === 404 || detail.includes("not match any of these")) {
+                return await apiClient.post("/main/v1/organization/enrollments/bulk/", {
+                    user_guids: userGuids,
+                    course_guids: courseGuids,
+                    action: "remove",
+                });
+            }
+
+            // If the backend still requires delete changes, fallback to the bulk delete attempt.
+            if (status === 405 || detail.includes("Method \"DELETE\" not allowed")) {
+                return await apiClient.delete("/main/v1/organization/enrollments/bulk/", {
+                    data: {
+                        user_guids: userGuids,
+                        course_guids: courseGuids,
+                    },
+                });
+            }
+
+            throw error;
+        }
     },
 
     createOrganizationUser: async (data: CreateOrganizationUserPayload) => {
