@@ -17,6 +17,54 @@ export const organizationApi = {
         return response || [];
     },
 
+    getOrganizationEnrollments: async (orgGuid?: string) => {
+        // Preferred approach: aggregate enrollments by querying each course's enrollments endpoint.
+        try {
+            const courses = await apiClient.get<TCoursePrviewDetails[]>('/main/v1/courses/');
+            if (Array.isArray(courses) && courses.length > 0) {
+                const enrollments: any[] = [];
+                for (const course of courses) {
+                    try {
+                        const courseResp = await apiClient.get<any>(`/main/v1/courses/${course.guid}/enrollments/`);
+                        const courseEnrollments = Array.isArray(courseResp) ? courseResp : (courseResp && (courseResp.data || courseResp.results || courseResp.enrollments)) || [];
+                        if (!Array.isArray(courseEnrollments) || courseEnrollments.length === 0) continue;
+
+                        for (const e of courseEnrollments) {
+                            const user = e.user || e.user_details || e.user_info || {};
+                            const userGuid = e.user_guid || user.guid || e.user?.guid || '';
+                            const userEmail = e.email || user.email || e.email_address || user.email_address || '';
+                            const userName =
+                                e.name ||
+                                e.user_name ||
+                                `${user.first_name || ''} ${user.last_name || ''}`.trim() ||
+                                user.name ||
+                                'Unknown';
+
+                            enrollments.push({
+                                userGuid,
+                                userName,
+                                userEmail,
+                                courseGuid: course.guid,
+                                courseTitle: course.title,
+                                enrolledAt: e.enrolled_at || e.created_at || e.timestamp || new Date().toISOString(),
+                                status: e.status || e.enrollment_status || 'Active',
+                            });
+                        }
+                    } catch (innerErr) {
+                        console.warn(`Failed to fetch enrollments for course ${course.guid}:`, innerErr);
+                    }
+                }
+
+                if (enrollments.length > 0) return enrollments;
+            }
+        } catch (err) {
+            // No per-course enrollments available or courses list failed. Return empty.
+        }
+
+        return [];
+
+    },
+
     getUserEnrolledCourses: async (userGuid: string) => {
         // Primary attempt: direct per-user endpoint (may not exist on all backend versions)
         try {
@@ -32,8 +80,9 @@ export const organizationApi = {
                 const enrolledCourses: TEnrolledCourse[] = [];
                 for (const c of courses) {
                     try {
-                        const enrollments: any[] | undefined = await apiClient.get<any[]>(`/main/v1/courses/${c.guid}/enrollments/`);
-                        if (Array.isArray(enrollments)) {
+                        const courseResp = await apiClient.get<any>(`/main/v1/courses/${c.guid}/enrollments/`);
+                        const enrollments: any[] | undefined = Array.isArray(courseResp) ? courseResp : (courseResp && (courseResp.data || courseResp.results || courseResp.enrollments)) || [];
+                        if (Array.isArray(enrollments) && enrollments.length > 0) {
                             const match = enrollments.find((e) => {
                                 // support multiple possible shapes: { user_guid }, { user: { guid } }, { user_guid: '...' }
                                 if (!e) return false;

@@ -93,6 +93,7 @@ const OrgDashboard: React.FC = () => {
   const orgName = user?.organization?.org_name || "KFC Kenya";
   const orgGuid = user?.organization?.guid || "";
   const usersPath = `/org/${orgGuid}/users`;
+  const enrollmentsPath = `/org/${orgGuid}/enrollments`;
 
   // Fetch users
   const { data: users = [] } = useQuery({
@@ -167,6 +168,7 @@ const OrgDashboard: React.FC = () => {
             .
           </Typography>
         </Box>
+        
       </Box>
 
       {/* Analytics Cards Grid */}

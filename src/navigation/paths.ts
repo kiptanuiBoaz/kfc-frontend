@@ -23,4 +23,5 @@ export const PATHS = {
     ORG_REGISTRATION: '/register',
     ORG_DASHBOARD: '/org/:orgGuid/',
     ORG_USERS: '/org/:orgGuid/users',
+    ORG_ENROLLMENTS: '/org/:orgGuid/enrollments',
 };

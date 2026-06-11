@@ -18,3 +18,13 @@ export interface CreateOrganizationUserPayload {
 export interface UpdateOrganizationUserPayload extends Partial<CreateOrganizationUserPayload> {
     guid: string;
 }
+
+export interface OrganizationEnrollment {
+    userGuid: string;
+    userName: string;
+    userEmail: string;
+    courseGuid: string;
+    courseTitle: string;
+    enrolledAt: string;
+    status: string;
+}
