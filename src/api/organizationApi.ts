@@ -66,60 +66,12 @@ export const organizationApi = {
     },
 
     getUserEnrolledCourses: async (userGuid: string) => {
-        // Primary attempt: direct per-user endpoint (may not exist on all backend versions)
         try {
             const response = await apiClient.get<TEnrolledCourse[]>(`/main/v1/users/${userGuid}/courses/`);
             return response || [];
         } catch (err: any) {
-            // If the backend doesn't expose a per-user courses endpoint, fall back to
-            // checking each course's enrollments endpoint and build a user-specific list.
-            try {
-                const courses = await apiClient.get<TCoursePrviewDetails[]>('/main/v1/courses/');
-                if (!Array.isArray(courses)) return [];
-
-                const enrolledCourses: TEnrolledCourse[] = [];
-                for (const c of courses) {
-                    try {
-                        const courseResp = await apiClient.get<any>(`/main/v1/courses/${c.guid}/enrollments/`);
-                        const enrollments: any[] | undefined = Array.isArray(courseResp) ? courseResp : (courseResp && (courseResp.data || courseResp.results || courseResp.enrollments)) || [];
-                        if (Array.isArray(enrollments) && enrollments.length > 0) {
-                            const match = enrollments.find((e) => {
-                                // support multiple possible shapes: { user_guid }, { user: { guid } }, { user_guid: '...' }
-                                if (!e) return false;
-                                if (e.user_guid && e.user_guid === userGuid) return true;
-                                if (e.user && e.user.guid && e.user.guid === userGuid) return true;
-                                if (e.user?.guid === userGuid) return true;
-                                return false;
-                            });
-                            if (match) {
-                                enrolledCourses.push({
-                                    guid: c.guid,
-                                    title: c.title,
-                                    description: c.description,
-                                    category: c.category,
-                                    image: c.image || null,
-                                    status: c.status,
-                                    enrolled_at: match.enrolled_at || new Date().toISOString(),
-                                    expertise_level: c.expertise_level || '',
-                                    course_progress: 0,
-                                    instructor: {
-                                        name: c.instructor_details?.first_name || '',
-                                        email: c.instructor_details?.email || '',
-                                    },
-                                } as TEnrolledCourse);
-                            }
-                        }
-                    } catch (innerErr) {
-                        // ignore per-course failures and continue
-                        console.warn(`Failed to fetch enrollments for course ${c.guid}:`, innerErr);
-                    }
-                }
-
-                return enrolledCourses;
-            } catch (fallbackErr) {
-                console.error('Failed to fetch enrolled courses for user (fallback):', fallbackErr);
-                return [];
-            }
+            console.error('Failed to fetch user enrolled courses:', err);
+            return [];
         }
     },
 
@@ -144,37 +96,10 @@ export const organizationApi = {
 
     // Unenroll one or more users from one or more courses (bulk)
     removeCourseFromUser: async (userGuids: string[], courseGuids: string[]) => {
-        try {
-            return await apiClient.post("/main/v1/organization/enrollments/bulk/remove/", {
-                user_guids: userGuids,
-                course_guids: courseGuids,
-            });
-        } catch (error: any) {
-            const status = error?.response?.status;
-            const detail = error?.response?.data?.detail || "";
-
-            // If the remove path doesn't exist, retry against the known bulk enroll endpoint
-            // with a removal action payload. This matches the only registered organizaton bulk route.
-            if (status === 404 || detail.includes("not match any of these")) {
-                return await apiClient.post("/main/v1/organization/enrollments/bulk/", {
-                    user_guids: userGuids,
-                    course_guids: courseGuids,
-                    action: "remove",
-                });
-            }
-
-            // If the backend still requires delete changes, fallback to the bulk delete attempt.
-            if (status === 405 || detail.includes("Method \"DELETE\" not allowed")) {
-                return await apiClient.delete("/main/v1/organization/enrollments/bulk/", {
-                    data: {
-                        user_guids: userGuids,
-                        course_guids: courseGuids,
-                    },
-                });
-            }
-
-            throw error;
-        }
+        return await apiClient.post("/main/v1/organization/enrollments/bulk/remove/", {
+            user_guids: userGuids,
+            course_guids: courseGuids,
+        });
     },
 
     createOrganizationUser: async (data: CreateOrganizationUserPayload) => {
