@@ -25,6 +25,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/api/apiClient";
+import { toSentenceCase } from "@/utils/toSentenceCase";
 
 interface UserModalProps {
   open: boolean;
@@ -49,15 +50,11 @@ export const UserModal: React.FC<UserModalProps> = ({
     data: roles = [],
     isLoading: rolesLoading,
     isError,
-  } = useQuery<TRole[]>({
+  } = useQuery({
     queryKey: ["roles"],
-    queryFn: async () => {
-      const response = await apiClient.get<{ data: TRole[] }>("/main/v1/role/all/");
-      return response?.data || [];
-    },
+    queryFn: async () => await apiClient.get<TRole[]>("/main/v1/role/all/"),
     enabled: open,
   });
-
   const isEdit = Boolean(user);
 
   const formik = useFormik({
@@ -137,7 +134,7 @@ export const UserModal: React.FC<UserModalProps> = ({
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 error={Boolean(
-                  formik.touched.first_name && formik.errors.first_name
+                  formik.touched.first_name && formik.errors.first_name,
                 )}
                 helperText={
                   formik.touched.first_name && formik.errors.first_name
@@ -155,7 +152,7 @@ export const UserModal: React.FC<UserModalProps> = ({
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 error={Boolean(
-                  formik.touched.last_name && formik.errors.last_name
+                  formik.touched.last_name && formik.errors.last_name,
                 )}
                 helperText={formik.touched.last_name && formik.errors.last_name}
               />
@@ -187,7 +184,7 @@ export const UserModal: React.FC<UserModalProps> = ({
                 }
                 onBlur={formik.handleBlur}
                 error={Boolean(
-                  formik.touched.phone_number && formik.errors.phone_number
+                  formik.touched.phone_number && formik.errors.phone_number,
                 )}
                 helperText={
                   formik.touched.phone_number && formik.errors.phone_number
@@ -217,7 +214,7 @@ export const UserModal: React.FC<UserModalProps> = ({
                   ) : null}
                   {roles.map((role) => (
                     <MenuItem key={role.guid} value={role.guid}>
-                      {role.name}
+                      {toSentenceCase(role.name)}
                     </MenuItem>
                   ))}
                 </Select>
@@ -342,8 +339,8 @@ export const UserModal: React.FC<UserModalProps> = ({
             {isLoading || formik.isSubmitting
               ? "Saving..."
               : isEdit
-              ? "Update User"
-              : "Create User"}
+                ? "Update User"
+                : "Create User"}
           </Button>
         </DialogActions>
       </form>

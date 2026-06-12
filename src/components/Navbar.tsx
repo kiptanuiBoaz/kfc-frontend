@@ -32,6 +32,7 @@ import { AppDispatch } from "@/redux/store";
 import { Notify } from "notiflix";
 import { UserProfileDropdown } from "@/components/shared/UserProfileDropdown";
 import { CustomContainer } from "@/components/shared/CustomContainer";
+import { UserProfileMenu } from "@/components/UserProfileMenu";
 
 const Navbar: React.FC = () => {
   const theme = useTheme();
@@ -65,11 +66,11 @@ const Navbar: React.FC = () => {
     { label: "Course Catalog", variant: "text" as const, to: PATHS.COURSES },
     location.pathname === PATHS.HOME
       ? {
-        label: "Trainings Calendar",
-        variant: "text" as const,
-        to: "#calendar",
-        scrollTo: true,
-      }
+          label: "Trainings Calendar",
+          variant: "text" as const,
+          to: "#calendar",
+          scrollTo: true,
+        }
       : undefined,
   ];
 

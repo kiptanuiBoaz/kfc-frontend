@@ -43,6 +43,7 @@ const AdminUsersPage: React.FC = () => {
     data: users = [],
     isLoading,
     isError,
+    error
   } = useQuery({
     queryKey: ["adminUsers"],
     queryFn: () => apiClient.get<AuthUser[]>("/main/v1/user/all/"),
