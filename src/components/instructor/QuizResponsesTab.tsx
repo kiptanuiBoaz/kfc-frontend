@@ -22,10 +22,12 @@ export const QuizResponsesTab: React.FC<QuizResponsesTabProps> = ({
     isError: isModulesError,
   } = useQuery<TCourseModule[]>({
     queryKey: ["courseModules", courseGuid],
-    queryFn: async () =>
-      await apiClient.get<TCourseModule[]>(
+    queryFn: async () => {
+      const data = await apiClient.get<TCourseModule[]>(
         `/main/v1/courses/${courseGuid}/modules/`
-      ),
+      );
+      return data ?? [];
+    },
     enabled: !!courseGuid,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

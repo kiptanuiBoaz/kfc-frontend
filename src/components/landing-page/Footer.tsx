@@ -1,4 +1,5 @@
 import React from "react";
+import { useLocation } from "react-router-dom";
 import {
   Box,
   Container,
@@ -25,11 +26,24 @@ const socialLinks = [
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
+  const location = useLocation();
+  const isDashboardOrOrg =
+    location.pathname.startsWith("/org") ||
+    location.pathname.startsWith("/dashboard") ||
+    location.pathname.startsWith("/instructor");
 
   return (
     <Box
       component="footer"
-      sx={{ bgcolor: "grey.100", mt: 8, pt: 4, px: 0, pb: 2 }}
+      sx={{
+        bgcolor: "grey.100",
+        mt: 8,
+        pt: 4,
+        px: 0,
+        pb: 2,
+        pl: isDashboardOrOrg ? { xs: 0, md: "260px" } : 0,
+        transition: "padding-left 0.3s ease",
+      }}
     >
       <Container maxWidth="lg">
         <Divider
@@ -37,14 +51,14 @@ const Footer: React.FC = () => {
           sx={{ display: { xs: "none", md: "block" }, my: 2 }}
         />
         <Stack
-          direction={{ xs: "column", md: "row" }}
-          spacing={2}
+          direction="column"
+          spacing={2.5}
           alignItems="center"
-          justifyContent="space-between"
-          sx={{ mb: 3, textAlign: { xs: "center", md: "left" } }}
+          justifyContent="center"
+          sx={{ mb: 3, textAlign: "center" }}
         >
-          <Stack spacing={0.5}>
-            <Typography variant="body1" fontWeight={600}>
+          <Stack spacing={0.5} alignItems="center">
+            <Typography variant="body1" fontWeight={600} textAlign="center">
               The KFC Training Academy is supported by the Import Promotion Desk
               (IPD)
             </Typography>
@@ -57,9 +71,14 @@ const Footer: React.FC = () => {
           />
         </Stack>
 
-        <Stack direction={["column", "row"]} justifyContent={"space-between"}>
+        <Stack
+          direction="column"
+          alignItems="center"
+          justifyContent="center"
+          spacing={1.5}
+        >
           <Typography
-            textAlign={[, "center", "left"]}
+            textAlign="center"
             variant="body2"
             color="text.secondary"
           >
@@ -68,7 +87,7 @@ const Footer: React.FC = () => {
           <Stack
             direction="row"
             spacing={1}
-            justifyContent={{ xs: "center", md: "flex-start" }}
+            justifyContent="center"
           >
             {socialLinks.map((social) => (
               <IconButton

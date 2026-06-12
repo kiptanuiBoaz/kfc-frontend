@@ -50,8 +50,8 @@ const InstructorCourses = () => {
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [menuCourseGuid, setMenuCourseGuid] = useState<string | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [coursePendingDelete, setCoursePendingDelete] =
+  const [isUnenrollDialogOpen, setIsUnenrollDialogOpen] = useState(false);
+  const [coursePendingUnenroll, setCoursePendingUnenroll] =
     useState<TCoursePrviewDetails | null>(null);
 
   // Convert courses
@@ -121,37 +121,37 @@ const InstructorCourses = () => {
     handleMenuClose();
   };
 
-  const deleteCourseMutation = useMutation({
+  const unenrollCourseMutation = useMutation({
     mutationFn: async (courseGuid: string) => {
-      return apiClient.delete(`/main/v1/courses/${courseGuid}/delete/`);
+      return apiClient.delete(`/main/v1/unenroll/${courseGuid}/`);
     },
     onSuccess: () => {
-      Notify.success("Course deleted successfully");
+      Notify.success("Course unenrolled successfully");
       queryClient.invalidateQueries({ queryKey: ["instructorCourses"] });
-      setIsDeleteDialogOpen(false);
-      setCoursePendingDelete(null);
+      setIsUnenrollDialogOpen(false);
+      setCoursePendingUnenroll(null);
     },
     onError: () => {
-      Notify.failure("Failed to delete course. Please try again.");
+      Notify.failure("Failed to unenroll course. Please try again.");
     },
   });
 
-  const handleDeleteCourseClick = () => {
+  const handleUnenrollCourseClick = () => {
     if (!activeCourse) return;
-    setCoursePendingDelete(activeCourse);
-    setIsDeleteDialogOpen(true);
+    setCoursePendingUnenroll(activeCourse);
+    setIsUnenrollDialogOpen(true);
     handleMenuClose();
   };
 
-  const handleConfirmDelete = () => {
-    if (!coursePendingDelete) return;
-    deleteCourseMutation.mutate(coursePendingDelete.guid);
+  const handleConfirmUnenroll = () => {
+    if (!coursePendingUnenroll) return;
+    unenrollCourseMutation.mutate(coursePendingUnenroll.guid);
   };
 
-  const handleCloseDeleteDialog = () => {
-    if (deleteCourseMutation.isPending) return;
-    setIsDeleteDialogOpen(false);
-    setCoursePendingDelete(null);
+  const handleCloseUnenrollDialog = () => {
+    if (unenrollCourseMutation.isPending) return;
+    setIsUnenrollDialogOpen(false);
+    setCoursePendingUnenroll(null);
   };
 
   if (coursesLoading) {
@@ -354,48 +354,48 @@ const InstructorCourses = () => {
             ? "Published"
             : "Edit Course"}
         </MenuItem>
-        <MenuItem onClick={handleDeleteCourseClick} disabled={!activeCourse}>
+        <MenuItem onClick={handleUnenrollCourseClick} disabled={!activeCourse}>
           <ListItemIcon>
             <Trash2 size={18} />
           </ListItemIcon>
-          Delete Course
+          Unenroll Course
         </MenuItem>
       </Menu>
 
       <Dialog
-        open={isDeleteDialogOpen}
-        onClose={handleCloseDeleteDialog}
+        open={isUnenrollDialogOpen}
+        onClose={handleCloseUnenrollDialog}
         PaperProps={{
           sx: { borderRadius: 3 },
         }}
       >
-        <DialogTitle sx={{ fontWeight: 700 }}>Delete Course</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 700 }}>Unenroll Course</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            {`Are you sure you want to delete "${
-              coursePendingDelete?.title ?? "this course"
+            {`Are you sure you want to unenroll from "${
+              coursePendingUnenroll?.title ?? "this course"
             }"? This action cannot be undone.`}
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 3 }}>
           <Button
-            onClick={handleCloseDeleteDialog}
-            disabled={deleteCourseMutation.isPending}
+            onClick={handleCloseUnenrollDialog}
+            disabled={unenrollCourseMutation.isPending}
           >
             Cancel
           </Button>
           <Button
-            onClick={handleConfirmDelete}
+            onClick={handleConfirmUnenroll}
             color="error"
             variant="contained"
             startIcon={
-              deleteCourseMutation.isPending ? (
+              unenrollCourseMutation.isPending ? (
                 <CircularProgress size={16} color="inherit" />
               ) : undefined
             }
-            disabled={deleteCourseMutation.isPending}
+            disabled={unenrollCourseMutation.isPending}
           >
-            {deleteCourseMutation.isPending ? "Deleting..." : "Delete"}
+            {unenrollCourseMutation.isPending ? "Unenrolling..." : "Unenroll"}
           </Button>
         </DialogActions>
       </Dialog>

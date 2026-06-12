@@ -51,7 +51,7 @@ const TakeCoursePage = () => {
     data: course,
     isLoading: isCourseLoading,
     isError: isCourseError,
-  } = useQuery<TCourse>({
+  } = useQuery<TCourse | undefined>({
     queryKey: ["courseDetails", courseGuid],
     enabled: !!courseGuid,
     queryFn: async () =>

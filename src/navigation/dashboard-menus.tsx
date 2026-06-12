@@ -1,5 +1,5 @@
 import { PATHS } from "@/navigation/paths";
-import { House, BookOpen, Users } from "lucide-react";
+import { House, BookOpen, Users, ClipboardList } from "lucide-react";
 import React from "react";
 
 export interface MenuItem {
@@ -89,5 +89,11 @@ export const orgMenus: MenuItem[] = [
     title: "Users",
     icon: <Users />,
     path: PATHS.ORG_USERS,
+  },
+
+  {
+    title: "Enrollments",
+    icon: <ClipboardList />,
+    path: PATHS.ORG_ENROLLMENTS,
   },
 ];

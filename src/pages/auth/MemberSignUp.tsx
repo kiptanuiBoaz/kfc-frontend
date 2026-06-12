@@ -80,7 +80,7 @@ const MemberSignUpPage: React.FC = () => {
       <Container maxWidth="sm" sx={{ py: { xs: 6, md: 10 } }}>
         <Paper elevation={4} sx={{ p: { xs: 3, md: 5 }, borderRadius: 3 }}>
           <Box sx={{ justifyContent: "center", display: "flex", mb: 3 }}>
-            <img src="/images/logo.png" alt="logo" style={{ height: 70 }} />
+            <Box component="img" src="/images/logo.png" alt="logo" sx={{ height: 70 }} />
           </Box>
           <Stack spacing={3}>
             <Stack spacing={1} textAlign="center">

@@ -371,14 +371,15 @@ const Navbar: React.FC = () => {
           }}
         >
           <Box href="/" component={Link} sx={{ display: "inline-flex" }}>
-            <img
+            <Box
+              component="img"
               src={
                 isMobile
                   ? "/images/logos/vertical_logo.png"
                   : "/images/logos/horizontal_logo.png"
               }
               alt="logo"
-              style={{ height: 80, width: "auto", padding: "10px 0" }}
+              sx={{ height: 80, width: "auto", py: "10px" }}
             />
           </Box>
 
