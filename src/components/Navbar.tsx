@@ -30,7 +30,7 @@ import { useUser, useIsAuthenticated } from "@/hooks/useAuth";
 import { logout } from "@/redux/slices/authSlice";
 import { AppDispatch } from "@/redux/store";
 import { Notify } from "notiflix";
-import { UserProfileMenu } from "@/components/UserProfileMenu";
+
 import { CustomContainer } from "@/components/shared/CustomContainer";
 import { UserProfileMenu } from "@/components/UserProfileMenu";
 

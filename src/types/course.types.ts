@@ -199,6 +199,7 @@ export interface TCoursePrviewDetails {
     updated_by: string,
     deleted_at: null | string,
     deleted_by: null | string
+    modules: TCourseModule[]
 }
 
 
