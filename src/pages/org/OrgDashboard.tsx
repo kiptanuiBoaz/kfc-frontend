@@ -96,11 +96,14 @@ const OrgDashboard: React.FC = () => {
   const enrollmentsPath = `/org/${orgGuid}/enrollments`;
 
   // Fetch users
-  const { data: users = [] } = useQuery({
+  const { data: rawUsers = [] } = useQuery({
     queryKey: ["orgUsers"],
     queryFn: organizationApi.getOrganizationUsers,
   });
 
+  const users = Array.isArray(rawUsers) 
+    ? rawUsers 
+    : (rawUsers as any)?.data || (rawUsers as any)?.results || [];
 
   const displayUsers = Array.isArray(users) && users.length > 0 ? users : DUMMY_ORG_USERS;
   const activeCount = displayUsers.filter((u) => u.is_active).length;
@@ -332,15 +335,19 @@ const OrgDashboard: React.FC = () => {
                   }
                 >
                   <ListItemAvatar>
-                    <Avatar sx={{ bgcolor: "primary.light", color: "primary.main", fontWeight: 700 }}>
-                      {orgUser.first_name.charAt(0)}
-                    </Avatar>
+                        <Avatar
+                          src={orgUser.image || undefined}
+                          sx={{ width: 40, height: 40, bgcolor: "primary.light" }}
+                        >
+                          {orgUser?.first_name?.charAt(0) || orgUser?.email?.charAt(0) || 'U'}
+                        </Avatar>
                   </ListItemAvatar>
                   <ListItemText
                     primary={`${orgUser.first_name} ${orgUser.last_name}`}
                     secondary={orgUser.email}
-                    primaryTypographyProps={{ fontWeight: 600, variant: "subtitle2" }}
-                    secondaryTypographyProps={{ variant: "body2", color: "text.secondary" }}
+                    primaryTypographyProps={{ fontWeight: 600, variant: "subtitle2", noWrap: true }}
+                    secondaryTypographyProps={{ variant: "body2", color: "text.secondary", noWrap: true }}
+                    sx={{ pr: 12 }}
                   />
                 </ListItem>
               ))}

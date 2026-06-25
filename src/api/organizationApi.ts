@@ -13,61 +13,24 @@ export const organizationApi = {
     },
 
     getOrganizationCourses: async () => {
-        const response = await apiClient.get<TCoursePrviewDetails[]>("/main/v1/courses/");
+        const response = await apiClient.get<TCoursePrviewDetails[]>("/main/v1/organization/courses/");
         return response || [];
     },
 
-    getOrganizationEnrollments: async (orgGuid?: string) => {
-        // Preferred approach: aggregate enrollments by querying each course's enrollments endpoint.
+    getOrganizationEnrollments: async (_orgGuid?: string) => {
+        // Uses the dedicated org courses endpoint which returns courses with enrollment counts
         try {
-            const courses = await apiClient.get<TCoursePrviewDetails[]>('/main/v1/courses/');
-            if (Array.isArray(courses) && courses.length > 0) {
-                const enrollments: any[] = [];
-                for (const course of courses) {
-                    try {
-                        const courseResp = await apiClient.get<any>(`/main/v1/courses/${course.guid}/enrollments/`);
-                        const courseEnrollments = Array.isArray(courseResp) ? courseResp : (courseResp && (courseResp.data || courseResp.results || courseResp.enrollments)) || [];
-                        if (!Array.isArray(courseEnrollments) || courseEnrollments.length === 0) continue;
-
-                        for (const e of courseEnrollments) {
-                            const user = e.user || e.user_details || e.user_info || {};
-                            const userGuid = e.user_guid || user.guid || e.user?.guid || '';
-                            const userEmail = e.email || user.email || e.email_address || user.email_address || '';
-                            const userName =
-                                e.name ||
-                                e.user_name ||
-                                `${user.first_name || ''} ${user.last_name || ''}`.trim() ||
-                                user.name ||
-                                'Unknown';
-
-                            enrollments.push({
-                                userGuid,
-                                userName,
-                                userEmail,
-                                courseGuid: course.guid,
-                                courseTitle: course.title,
-                                enrolledAt: e.enrolled_at || e.created_at || e.timestamp || new Date().toISOString(),
-                                status: e.status || e.enrollment_status || 'Active',
-                            });
-                        }
-                    } catch (innerErr) {
-                        console.warn(`Failed to fetch enrollments for course ${course.guid}:`, innerErr);
-                    }
-                }
-
-                if (enrollments.length > 0) return enrollments;
-            }
+            const courses = await apiClient.get<any[]>('/main/v1/organization/courses/');
+            return Array.isArray(courses) ? courses : [];
         } catch (err) {
-            // No per-course enrollments available or courses list failed. Return empty.
+            console.warn('Failed to fetch organization enrollments:', err);
+            return [];
         }
-
-        return [];
-
     },
 
     getUserEnrolledCourses: async (userGuid: string) => {
         try {
-            const response = await apiClient.get<TEnrolledCourse[]>(`/main/v1/users/${userGuid}/courses/`);
+            const response = await apiClient.get<TEnrolledCourse[]>(`/main/v1/organization/members/${userGuid}/courses/`);
             return response || [];
         } catch (err: any) {
             console.error('Failed to fetch user enrolled courses:', err);
@@ -76,15 +39,21 @@ export const organizationApi = {
     },
 
     assignCoursesToUsers: async (userGuids: string[], courseGuids: string[]) => {
-        return await apiClient.post("/main/v1/organization/enrollments/bulk/", {
-            user_guids: userGuids,
-            course_guids: courseGuids,
-        });
+        // Use the per-member enrollment endpoint for each user
+        const results = [];
+        for (const userGuid of userGuids) {
+            const result = await apiClient.post("/main/v1/organization/enrollments/member/", {
+                user_guid: userGuid,
+                course_guids: courseGuids,
+            });
+            results.push(result);
+        }
+        return results;
     },
 
     assignCourseToUser: async (userGuid: string, courseGuid: string) => {
-        return await apiClient.post("/main/v1/organization/enrollments/bulk/", {
-            user_guids: [userGuid],
+        return await apiClient.post("/main/v1/organization/enrollments/member/", {
+            user_guid: userGuid,
             course_guids: [courseGuid],
         });
     },
@@ -94,12 +63,26 @@ export const organizationApi = {
         return await apiClient.delete(`/main/v1/unenroll/${courseGuid}/`);
     },
 
-    // Unenroll one or more users from one or more courses (bulk)
+    // Unenroll a specific org member from a specific course
     removeCourseFromUser: async (userGuids: string[], courseGuids: string[]) => {
-        return await apiClient.post("/main/v1/organization/enrollments/bulk/remove/", {
-            user_guids: userGuids,
-            course_guids: courseGuids,
-        });
+        // For single user/course removal, use the dedicated DELETE endpoint
+        if (userGuids.length === 1 && courseGuids.length === 1) {
+            return await apiClient.delete(`/main/v1/organization/enrollments/member/${userGuids[0]}/${courseGuids[0]}/`);
+        }
+        // For bulk removals, iterate through each pair
+        const results = [];
+        for (const userGuid of userGuids) {
+            for (const courseGuid of courseGuids) {
+                try {
+                    const result = await apiClient.delete(`/main/v1/organization/enrollments/member/${userGuid}/${courseGuid}/`);
+                    results.push(result);
+                } catch (err) {
+                    console.warn(`Failed to unenroll user ${userGuid} from course ${courseGuid}:`, err);
+                    throw err;
+                }
+            }
+        }
+        return results;
     },
 
     createOrganizationUser: async (data: CreateOrganizationUserPayload) => {

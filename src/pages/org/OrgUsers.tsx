@@ -178,21 +178,29 @@ const OrgUsers: React.FC = () => {
 
   // Fetch courses for assignment
   const {
-    data: organizationCourses = [],
+    data: rawOrganizationCourses = [],
   } = useQuery({
     queryKey: ["organizationCourses"],
     queryFn: organizationApi.getOrganizationCourses,
   });
 
+  const organizationCourses = Array.isArray(rawOrganizationCourses) 
+    ? rawOrganizationCourses 
+    : (rawOrganizationCourses as any)?.data || (rawOrganizationCourses as any)?.results || [];
+
   // Fetch users
   const {
-    data: users = [],
+    data: rawUsers = [],
     isLoading,
     isError,
   } = useQuery({
     queryKey: ["orgUsers"],
     queryFn: organizationApi.getOrganizationUsers,
   });
+
+  const users = Array.isArray(rawUsers) 
+    ? rawUsers 
+    : (rawUsers as any)?.data || (rawUsers as any)?.results || [];
 
   const displayUsers = Array.isArray(users) && users.length > 0 ? users : DUMMY_ORG_USERS;
 
@@ -618,9 +626,9 @@ const OrgUsers: React.FC = () => {
   };
 
   const filteredUsers = displayUsers.filter((u) =>
-    `${u.first_name} ${u.last_name} ${u.email}`
+    u ? `${u.first_name || ""} ${u.last_name || ""} ${u.email || ""}`
       .toLowerCase()
-      .includes(searchTerm.toLowerCase())
+      .includes((searchTerm || "").toLowerCase()) : false
   );
 
   const availableCoursesToAdd = organizationCourses.filter((course: TCoursePrviewDetails) =>
@@ -631,7 +639,7 @@ const OrgUsers: React.FC = () => {
   const availableCoursesForBulk = useMemo(() => {
     if (selectedUsersForBulk.length === 0) return organizationCourses;
 
-    return organizationCourses.filter((course) =>
+    return organizationCourses.filter((course: TCoursePrviewDetails) =>
       selectedUsersForBulk.some((user) =>
         !(selectedUsersEnrolledCourses[user.guid] || []).some((enrolledCourse) => enrolledCourse.guid === course.guid)
       )
@@ -761,7 +769,7 @@ const OrgUsers: React.FC = () => {
                           src={orgUser.image || undefined}
                           sx={{ width: 40, height: 40, bgcolor: "primary.light" }}
                         >
-                          {orgUser.first_name.charAt(0)}
+                          {orgUser?.first_name?.charAt(0) || orgUser?.email?.charAt(0) || 'U'}
                         </Avatar>
                         <Box>
                           <Typography variant="subtitle2" fontWeight={600}>
