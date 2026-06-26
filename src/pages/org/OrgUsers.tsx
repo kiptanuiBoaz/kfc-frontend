@@ -44,6 +44,13 @@ import { Notify } from "notiflix";
 import { isCourseEnrolled } from "@/utils/isCourseEnrolled";
 import dayjs from "dayjs";
 
+const normalizeArray = <T,>(value: T[] | { data?: T[]; results?: T[] } | undefined): T[] => {
+  if (Array.isArray(value)) return value;
+  if (Array.isArray((value as any)?.data)) return (value as any).data;
+  if (Array.isArray((value as any)?.results)) return (value as any).results;
+  return [];
+};
+
 const DUMMY_ORG_USERS: OrganizationUser[] = [
   {
     guid: "dummy-user-1",
@@ -144,7 +151,7 @@ const OrgUsers: React.FC = () => {
       
       for (const user of selectedUsersForBulk) {
         try {
-          const enrolled = await organizationApi.getUserEnrolledCourses(user.guid);
+          const enrolled = normalizeArray(await organizationApi.getUserEnrolledCourses(user.guid));
           enrolledCoursesMap[user.guid] = enrolled;
         } catch (error) {
           console.error(`Failed to fetch enrolled courses for user ${user.guid}:`, error);
@@ -184,9 +191,7 @@ const OrgUsers: React.FC = () => {
     queryFn: organizationApi.getOrganizationCourses,
   });
 
-  const organizationCourses = Array.isArray(rawOrganizationCourses) 
-    ? rawOrganizationCourses 
-    : (rawOrganizationCourses as any)?.data || (rawOrganizationCourses as any)?.results || [];
+  const organizationCourses = normalizeArray(rawOrganizationCourses);
 
   // Fetch users
   const {
@@ -198,9 +203,7 @@ const OrgUsers: React.FC = () => {
     queryFn: organizationApi.getOrganizationUsers,
   });
 
-  const users = Array.isArray(rawUsers) 
-    ? rawUsers 
-    : (rawUsers as any)?.data || (rawUsers as any)?.results || [];
+  const users = normalizeArray(rawUsers);
 
   const displayUsers = Array.isArray(users) && users.length > 0 ? users : DUMMY_ORG_USERS;
 
